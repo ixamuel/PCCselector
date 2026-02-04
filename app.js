@@ -133,9 +133,7 @@ const elements = {
   mouserButton: document.getElementById("mouserButton"),
   octopartButton: document.getElementById("octopartButton"),
   clearSelectedButton: document.getElementById("clearSelectedButton"),
-  clearSelectedButton: document.getElementById("clearSelectedButton"),
-  clearFiltersButton: document.getElementById("clearFiltersButton"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop")
+  clearFiltersButton: document.getElementById("clearFiltersButton")
 };
 
 function toNumber(value) {
@@ -1209,18 +1207,7 @@ function bindEvents() {
 
   if (elements.sidebarToggle) {
     elements.sidebarToggle.addEventListener("click", () => {
-      const isHidden = document.body.classList.toggle("sidebar-hidden");
-      if (elements.sidebarBackdrop) {
-        elements.sidebarBackdrop.classList.toggle("visible", !isHidden);
-      }
-      syncSidebarHeight();
-    });
-  }
-
-  if (elements.sidebarBackdrop) {
-    elements.sidebarBackdrop.addEventListener("click", () => {
-      document.body.classList.add("sidebar-hidden");
-      elements.sidebarBackdrop.classList.remove("visible");
+      document.body.classList.toggle("sidebar-hidden");
       syncSidebarHeight();
     });
   }
@@ -1378,8 +1365,8 @@ th{background:#f0f2f4}
 <button id="copyBtn">Copy to Clipboard</button>
 <table><thead><tr>${header.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
 <tbody>${bodyRows
-      .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
-      .join("")}</tbody></table>
+    .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
+    .join("")}</tbody></table>
 <script>
 const tsv = ${JSON.stringify(tsv)};
 const btn = document.getElementById('copyBtn');
