@@ -135,7 +135,8 @@ const elements = {
   clearSelectedButton: document.getElementById("clearSelectedButton"),
   clearFiltersButton: document.getElementById("clearFiltersButton"),
   sidebarClose: document.getElementById("sidebarClose"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop")
+  sidebarBackdrop: document.getElementById("sidebarBackdrop"),
+  sidebarClear: document.getElementById("sidebarClear")
 };
 
 function toNumber(value) {
@@ -1218,6 +1219,12 @@ function bindEvents() {
     elements.sidebarClose.addEventListener("click", () => {
       document.body.classList.add("sidebar-hidden");
       syncSidebarHeight();
+    });
+  }
+
+  if (elements.sidebarClear) {
+    elements.sidebarClear.addEventListener("click", () => {
+      clearFiltersOnly();
     });
   }
 

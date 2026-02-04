@@ -220,10 +220,41 @@ button.ghost:hover {
 }
 
 .sidebar-header {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-clear {
+  background: rgba(217, 83, 79, 0.1);
+  color: #d9534f;
+  border: 1px solid rgba(217, 83, 79, 0.2);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-clear:hover {
+  background: rgba(217, 83, 79, 0.18);
+  border-color: rgba(217, 83, 79, 0.35);
+}
+
+@media (min-width: 701px) {
+  .sidebar-clear {
+    display: none;
+  }
 }
 
 .sidebar-close {
@@ -1075,7 +1106,44 @@ tbody tr:hover {
   }
 
   .brand .active-filters {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    gap: 6px;
+    margin-top: 6px;
+    scrollbar-width: none;
+  }
+
+  .brand .active-filters::-webkit-scrollbar {
     display: none;
-    /* Hide from header to save space on mobile */
+  }
+
+  .active-chip {
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* Improved Slider Touch Targets */
+  .range-input::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .range-input::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .dual-range {
+    height: 36px;
+  }
+
+  .range-input {
+    height: 36px;
   }
 }
