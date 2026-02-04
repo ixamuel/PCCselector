@@ -1402,6 +1402,11 @@ btn.addEventListener('click', async () => {
 
 function syncSidebarHeight() {
   if (!elements.sidebar || !elements.topbarContent || !elements.resultsSection) return;
+  if (window.innerWidth <= 700) {
+    elements.sidebar.style.height = "";
+    elements.sidebar.style.marginTop = "";
+    return;
+  }
   if (document.body.classList.contains("sidebar-hidden")) {
     elements.sidebar.style.height = "";
     elements.sidebar.style.marginTop = "";
