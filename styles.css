@@ -1242,110 +1242,86 @@ tbody tr:hover {
   }
 
   .selection-tags {
-    left: 10px;
-    right: 10px;
+    left: 8px;
+    right: 8px;
     width: auto;
     max-width: none;
-    bottom: 125px;
-    /* Moved up to make room for 2-row buttons */
+    bottom: 120px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 6px;
     border-radius: 8px;
     border: 1px solid var(--line);
-    max-height: 120px;
+    max-height: 100px;
     overflow-y: auto;
   }
 
   .selection-tags .tag {
     margin: 0;
     font-size: 10px;
-    padding: 4px;
+    padding: 2px 4px;
     justify-content: center;
     border-radius: 4px;
+    min-width: 0;
+    /* Critical for grid sizing */
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .selection-pill {
-    left: 10px;
-    right: 10px;
+    left: 8px;
+    right: 8px;
     width: auto;
     max-width: none;
     bottom: 10px;
     padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: block;
+    /* Using direct grid children positioning */
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
 
   .selection-divider {
     display: none;
   }
 
-  .selection-pill #clearSelectedButton {
-    width: 100%;
-    order: -1;
-    /* Keep at top */
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
-    border-radius: 0;
+  #clearSelectedButton {
+    /* Reset from desktop/pill container styles if needed */
+    margin: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    padding: 8px 4px !important;
+    font-size: 10px !important;
   }
 
   .selection-buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto auto;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
   }
 
-  .selection-buttons button {
-    font-size: 10px;
-    padding: 8px 4px;
-    width: 100%;
-    margin: 0 !important;
-    white-space: nowrap;
-  }
+  /* Force the buttons into the 2-row x 3-column layout requested */
+  /* Row 1: Clear Selected, Compare PN, Export Table */
+  /* We'll move clearSelectedButton into this grid visually if we can, but since it's a sibling,
+     we should either move it in JS or use subgrid. Alternatively, make .selection-pill the grid. */
 
-  /* Specific Row Ordering for buttons */
-  #compareButton {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  #exportButton {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  #octopartButton {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  #mouserButton {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  #farnellButton {
-    grid-column: 3;
-    grid-row: 2;
-  }
-
-  /* Re-order clear button to be part of the grid or keep it separate? User asked for:
-     Row 1: Clear Selected, Compare PN, Export Table
-     Row 2: Octopart, Mouser, Farnell
-  */
   .selection-pill {
-    display: block;
-  }
-
-  .selection-buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    grid-template-rows: auto auto;
+    gap: 4px;
+  }
+
+  .selection-pill>.selection-buttons {
+    display: contents;
+    /* Makes buttons direct children of the pill for grid positioning */
   }
 
   #clearSelectedButton {
@@ -1376,5 +1352,15 @@ tbody tr:hover {
   #farnellButton {
     grid-column: 3;
     grid-row: 2;
+  }
+
+  .selection-pill button {
+    font-size: 10px;
+    padding: 8px 2px;
+    width: 100%;
+    margin: 0 !important;
+    white-space: nowrap;
+    border: 1px solid rgba(0, 88, 163, 0.1) !important;
+    border-radius: 6px;
   }
 }
