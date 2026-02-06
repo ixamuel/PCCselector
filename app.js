@@ -1436,6 +1436,8 @@ btn.addEventListener('click', async () => {
 
 applyFilters();
 
+// Note: syncSidebarHeight() was removed in favor of a pure CSS sticky/grid layout
+// which handles scrolling and placement more robustly across all screen sizes.
 prepareData();
 initState();
 renderFilters();
