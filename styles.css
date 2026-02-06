@@ -487,6 +487,7 @@ details.filter[open] .accordion-icon {
   background: none;
   pointer-events: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .range-input::-webkit-slider-thumb {
@@ -892,28 +893,28 @@ tbody td {
   font-size: 12px;
 }
 
-.btn-octopart {
-  background: rgba(0, 161, 222, 0.12);
-  border-color: rgba(0, 161, 222, 0.4);
-  color: #0088bb;
+.selection-pill .btn-octopart {
+  background: rgba(0, 161, 222, 0.12) !important;
+  border-color: rgba(0, 161, 222, 0.4) !important;
+  color: #0088bb !important;
 }
 
-.btn-mouser {
-  background: rgba(0, 72, 140, 0.12);
-  border-color: rgba(0, 72, 140, 0.4);
-  color: #003d76;
+.selection-pill .btn-mouser {
+  background: rgba(0, 72, 140, 0.12) !important;
+  border-color: rgba(0, 72, 140, 0.4) !important;
+  color: #003d76 !important;
 }
 
-.btn-farnell {
-  background: rgba(16, 150, 80, 0.1);
-  border-color: rgba(16, 150, 80, 0.4);
-  color: #0a7a3f;
+.selection-pill .btn-farnell {
+  background: rgba(16, 150, 80, 0.1) !important;
+  border-color: rgba(16, 150, 80, 0.4) !important;
+  color: #0a7a3f !important;
 }
 
-.btn-export {
-  background: rgba(33, 115, 70, 0.12);
-  border-color: rgba(33, 115, 70, 0.4);
-  color: #1d6f42;
+.selection-pill .btn-export {
+  background: rgba(33, 115, 70, 0.12) !important;
+  border-color: rgba(33, 115, 70, 0.4) !important;
+  color: #1d6f42 !important;
 }
 
 button.ghost:disabled {
@@ -1184,17 +1185,20 @@ tbody tr:hover {
 
   /* Improved Slider Touch Targets */
   .range-input::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
-    border-width: 3px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    width: 34px;
+    height: 34px;
+    border: 10px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px var(--accent), 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* 14px + 10px*2 = 34px hit area, but looks 14px */
   }
 
   .range-input::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
-    border-width: 3px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    width: 34px;
+    height: 34px;
+    border: 10px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px var(--accent), 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
   .dual-range {
