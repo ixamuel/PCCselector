@@ -1246,7 +1246,25 @@ tbody tr:hover {
     right: 10px;
     width: auto;
     max-width: none;
-    bottom: 80px;
+    bottom: 125px;
+    /* Moved up to make room for 2-row buttons */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .selection-tags .tag {
+    margin: 0;
+    font-size: 10px;
+    padding: 4px;
+    justify-content: center;
+    border-radius: 4px;
   }
 
   .selection-pill {
@@ -1255,6 +1273,108 @@ tbody tr:hover {
     width: auto;
     max-width: none;
     bottom: 10px;
-    padding: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .selection-divider {
+    display: none;
+  }
+
+  .selection-pill #clearSelectedButton {
+    width: 100%;
+    order: -1;
+    /* Keep at top */
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    border-radius: 0;
+  }
+
+  .selection-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .selection-buttons button {
+    font-size: 10px;
+    padding: 8px 4px;
+    width: 100%;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+
+  /* Specific Row Ordering for buttons */
+  #compareButton {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #exportButton {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  #octopartButton {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #mouserButton {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #farnellButton {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  /* Re-order clear button to be part of the grid or keep it separate? User asked for:
+     Row 1: Clear Selected, Compare PN, Export Table
+     Row 2: Octopart, Mouser, Farnell
+  */
+  .selection-pill {
+    display: block;
+  }
+
+  .selection-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  #clearSelectedButton {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #compareButton {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #exportButton {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  #octopartButton {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #mouserButton {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #farnellButton {
+    grid-column: 3;
+    grid-row: 2;
   }
 }
