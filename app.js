@@ -102,9 +102,7 @@ const state = {
   numericTargets: {},
   selected: [],
   compareOnly: false,
-  sortKey: null,
-  sortDirection: null,
-  baseSidebarHeight: null
+  sortDirection: null
 };
 
 const numericMeta = {};
@@ -1196,7 +1194,6 @@ function applyFilters() {
   updateCategoricalUI();
   updateActiveFilters();
   updateHistograms();
-  syncSidebarHeight();
   updateSelectionPanel();
 }
 
@@ -1238,14 +1235,12 @@ function bindEvents() {
   if (elements.sidebarToggle) {
     elements.sidebarToggle.addEventListener("click", () => {
       document.body.classList.toggle("sidebar-hidden");
-      syncSidebarHeight();
     });
   }
 
   if (elements.sidebarClose) {
     elements.sidebarClose.addEventListener("click", () => {
       document.body.classList.add("sidebar-hidden");
-      syncSidebarHeight();
     });
   }
 
@@ -1258,7 +1253,6 @@ function bindEvents() {
   if (elements.sidebarBackdrop) {
     elements.sidebarBackdrop.addEventListener("click", () => {
       document.body.classList.add("sidebar-hidden");
-      syncSidebarHeight();
     });
   }
 
@@ -1309,7 +1303,6 @@ function bindEvents() {
   }
 
   window.addEventListener("resize", () => {
-    syncSidebarHeight();
   });
 }
 
@@ -1441,29 +1434,7 @@ btn.addEventListener('click', async () => {
   }
 }
 
-function syncSidebarHeight() {
-  if (!elements.sidebar || !elements.topbarContent || !elements.resultsSection) return;
-  if (window.innerWidth <= 700) {
-    elements.sidebar.style.height = "";
-    elements.sidebar.style.marginTop = "";
-    return;
-  }
-  if (document.body.classList.contains("sidebar-hidden")) {
-    elements.sidebar.style.height = "";
-    elements.sidebar.style.marginTop = "";
-    return;
-  }
-  const topbarRect = elements.topbarContent.getBoundingClientRect();
-  const resultsRect = elements.resultsSection.getBoundingClientRect();
-  const gap = Math.max(resultsRect.top - topbarRect.bottom, 0);
-  const totalHeight = topbarRect.height + gap + resultsRect.height;
-  if (state.baseSidebarHeight === null || totalHeight > state.baseSidebarHeight) {
-    state.baseSidebarHeight = totalHeight;
-  }
-  const targetHeight = Math.max(totalHeight, state.baseSidebarHeight, 240);
-  elements.sidebar.style.height = `${targetHeight}px`;
-  elements.sidebar.style.marginTop = `-${topbarRect.height + gap}px`;
-}
+applyFilters();
 
 prepareData();
 initState();
@@ -1472,4 +1443,3 @@ renderHeader();
 updateSortIndicators();
 bindEvents();
 applyFilters();
-syncSidebarHeight();

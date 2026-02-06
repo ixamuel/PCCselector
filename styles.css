@@ -23,16 +23,24 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   font-family: var(--font);
   color: var(--text);
   background: radial-gradient(120% 120% at 10% 10%, #e9f2ff 0%, #f6f9ff 55%, #ffffff 100%);
-  min-height: 100vh;
 }
 
 .page {
-  padding: 32px;
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -40,11 +48,8 @@ body {
   grid-template-columns: 320px 1fr;
   gap: 24px;
   padding: 0;
-  margin-bottom: 0;
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: transparent;
+  margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .topbar-spacer {
@@ -208,6 +213,8 @@ button.ghost:hover {
   gap: 24px;
   margin-top: 0;
   align-items: start;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -215,8 +222,11 @@ button.ghost:hover {
   border-radius: var(--radius);
   padding: 14px 20px 20px;
   border: 1px solid var(--line);
-  height: auto;
-  overflow: auto;
+  height: 100%;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  padding-bottom: 120px;
+  /* Space for selection panel */
 }
 
 .sidebar-header {
@@ -565,6 +575,10 @@ details.filter[open] .accordion-icon {
   display: grid;
   gap: 16px;
   align-self: start;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 120px;
+  /* Space for selection panel */
 }
 
 .results-hint:empty {
@@ -982,14 +996,17 @@ tbody tr:hover {
 
 @media (max-width: 850px) {
   .topbar {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar-content {
     grid-template-columns: auto 1fr;
+    gap: 12px;
   }
 
-  .layout {
+  .topbar-spacer {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .topbar {
     grid-template-columns: 1fr;
   }
 
