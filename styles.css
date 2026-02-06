@@ -496,8 +496,8 @@ details.filter[open] .accordion-icon {
   height: 14px;
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid #0c1418;
-  box-shadow: 0 0 0 3px rgba(46, 211, 183, 0.2);
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .range-input::-moz-range-thumb {
@@ -506,18 +506,22 @@ details.filter[open] .accordion-icon {
   height: 14px;
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid #0c1418;
-  box-shadow: 0 0 0 3px rgba(46, 211, 183, 0.2);
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .range-input::-webkit-slider-runnable-track {
   height: 6px;
   background: transparent;
+  display: flex;
+  align-items: center;
 }
 
 .range-input::-moz-range-track {
   height: 6px;
   background: transparent;
+  display: flex;
+  align-items: center;
 }
 
 .range-hint {
@@ -889,13 +893,27 @@ tbody td {
 }
 
 .btn-octopart {
-  background: rgba(91, 164, 230, 0.2);
-  border-color: rgba(91, 164, 230, 0.5);
+  background: rgba(0, 161, 222, 0.12);
+  border-color: rgba(0, 161, 222, 0.4);
+  color: #0088bb;
 }
 
 .btn-mouser {
-  background: rgba(0, 72, 140, 0.18);
-  border-color: rgba(0, 88, 163, 0.45);
+  background: rgba(0, 72, 140, 0.12);
+  border-color: rgba(0, 72, 140, 0.4);
+  color: #003d76;
+}
+
+.btn-farnell {
+  background: rgba(16, 150, 80, 0.1);
+  border-color: rgba(16, 150, 80, 0.4);
+  color: #0a7a3f;
+}
+
+.btn-export {
+  background: rgba(33, 115, 70, 0.12);
+  border-color: rgba(33, 115, 70, 0.4);
+  color: #1d6f42;
 }
 
 button.ghost:disabled {

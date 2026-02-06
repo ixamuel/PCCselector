@@ -131,6 +131,7 @@ const elements = {
   compareButton: document.getElementById("compareButton"),
   exportButton: document.getElementById("exportButton"),
   mouserButton: document.getElementById("mouserButton"),
+  farnellButton: document.getElementById("farnellButton"),
   octopartButton: document.getElementById("octopartButton"),
   clearSelectedButton: document.getElementById("clearSelectedButton"),
   clearFiltersButton: document.getElementById("clearFiltersButton"),
@@ -1301,6 +1302,12 @@ function bindEvents() {
     });
   }
 
+  if (elements.farnellButton) {
+    elements.farnellButton.addEventListener("click", () => {
+      openEachLink("https://de.farnell.com/search?st=");
+    });
+  }
+
   window.addEventListener("resize", () => {
     syncSidebarHeight();
   });
@@ -1372,6 +1379,7 @@ function updateSelectionPanel() {
   if (elements.exportButton) elements.exportButton.disabled = disabled;
   if (elements.mouserButton) elements.mouserButton.disabled = disabled;
   if (elements.octopartButton) elements.octopartButton.disabled = disabled;
+  if (elements.farnellButton) elements.farnellButton.disabled = disabled;
 }
 
 function openEachLink(baseUrl, extraParams = "") {
