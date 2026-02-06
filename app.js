@@ -1074,6 +1074,10 @@ function renderResults(rows) {
 
   rows.forEach((row) => {
     const tr = document.createElement("tr");
+    const pn = String(row["Part Number"]);
+    if (state.selected.includes(pn)) {
+      tr.classList.add("results-row--selected");
+    }
     if (String(row["Status"] || "").toUpperCase() === "NRND") {
       tr.classList.add("row-nrnd");
     }

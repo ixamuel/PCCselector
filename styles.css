@@ -1008,6 +1008,10 @@ tbody tr:hover {
   background: rgba(0, 88, 163, 0.08);
 }
 
+tbody tr.results-row--selected {
+  background: rgba(0, 88, 163, 0.12) !important;
+}
+
 .empty-state {
   text-align: center;
   padding: 16px;
