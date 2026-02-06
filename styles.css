@@ -1106,38 +1106,96 @@ tbody tr.results-row--selected {
   }
 
   .topbar-content {
-    display: flex;
-    flex-wrap: wrap;
-    /* Allow stacking if needed */
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "controls brand brand"
+      "search search results";
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
-    padding: 4px 8px;
+    padding: 8px;
     background: transparent;
     border: none;
     box-shadow: none;
     backdrop-filter: none;
   }
 
+  .topbar-controls {
+    grid-area: controls;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .brand {
+    grid-area: brand;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    margin-right: -40px;
+    /* Shift to stay away from the right side */
+  }
+
   .brand .title {
     font-size: 14px;
-    /* Slightly smaller for density */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 60%;
+    max-width: 90%;
   }
 
-  .brand .subtitle,
-  .search-label {
-    display: none;
+  /* Stabilize title position on mobile */
+  #clearFiltersButton {
+    order: 2;
+    background: rgba(217, 83, 79, 0.1);
+    color: var(--danger);
+    border-radius: 4px;
+    padding: 4px 8px;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
   }
 
   .search {
+    grid-area: search;
     width: 100%;
-    order: 3;
-    /* Push search below title/matches */
-    margin-top: 4px;
+    margin-top: 0;
+  }
+
+  .header-results {
+    grid-area: results;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 8px;
+  }
+
+  .results-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+    min-width: 60px;
+  }
+
+  .results-count .count-num {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .results-count .count-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-top: 2px;
   }
 
   .search-row input {

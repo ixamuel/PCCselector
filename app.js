@@ -1184,7 +1184,7 @@ function renderResults(rows) {
     elements.resultsBody.appendChild(tr);
   });
 
-  elements.resultsCount.textContent = `${rows.length} Matches`;
+  elements.resultsCount.innerHTML = `<span class="count-num">${rows.length}</span><span class="count-label">Matches</span>`;
   elements.emptyState.classList.toggle("hidden", rows.length !== 0);
 }
 
