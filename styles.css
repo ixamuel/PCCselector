@@ -57,7 +57,8 @@ body {
 
 .topbar-content {
   display: grid;
-  grid-template-columns: auto 1.2fr 1.2fr auto;
+  grid-template-columns: auto 1fr auto 1.2fr;
+  grid-template-areas: "controls brand results search";
   align-items: center;
   gap: 32px;
   padding: 24px;
@@ -69,11 +70,51 @@ body {
 }
 
 .topbar-controls {
+  grid-area: controls;
+}
+
+.brand {
+  grid-area: brand;
+}
+
+.header-results {
+  grid-area: results;
+}
+
+.search {
+  grid-area: search;
+}
+
+.topbar-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding-top: 4px;
+}
+
+.results-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  min-width: 60px;
+}
+
+.results-count .count-num {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.results-count .count-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
 .icon-btn {
@@ -591,18 +632,12 @@ details.filter[open] .accordion-icon {
   display: none;
 }
 
-.sidebar-hidden .topbar-content {
-  grid-template-columns: auto 1.2fr 1fr;
-}
-
 .results-header {
   display: grid;
   gap: 6px;
 }
 
 .results-count {
-  font-size: 18px;
-  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1057,10 +1092,10 @@ tbody tr.results-row--selected {
     backdrop-filter: none;
     padding: 0;
     gap: 16px;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
     grid-template-areas:
-      "controls brand results"
-      "search search search";
+      "controls brand results search";
+    align-items: center;
   }
 
   .topbar-controls {
@@ -1107,13 +1142,13 @@ tbody tr.results-row--selected {
 
   .topbar-content {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 40px 1fr 60px;
     grid-template-areas:
-      "controls brand brand"
+      "hamburger brand clear"
       "search search results";
     align-items: center;
-    gap: 8px;
-    padding: 8px;
+    gap: 8px 12px;
+    padding: 6px 12px;
     background: transparent;
     border: none;
     box-shadow: none;
@@ -1121,49 +1156,31 @@ tbody tr.results-row--selected {
   }
 
   .topbar-controls {
-    grid-area: controls;
-    display: flex;
-    gap: 4px;
-    align-items: center;
+    display: contents;
+  }
+
+  #sidebarToggle {
+    grid-area: hamburger;
+    margin: 0;
+  }
+
+  #clearFiltersButton {
+    grid-area: clear;
+    margin: 0;
+    justify-self: center;
   }
 
   .brand {
     grid-area: brand;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    text-align: center;
     overflow: hidden;
-    margin-right: -40px;
-    /* Shift to stay away from the right side */
-  }
-
-  .brand .title {
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
-  }
-
-  /* Stabilize title position on mobile */
-  #clearFiltersButton {
-    order: 2;
-    background: rgba(217, 83, 79, 0.1);
-    color: var(--danger);
-    border-radius: 4px;
-    padding: 4px 8px;
-    height: 32px;
-    width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    padding: 0;
+    margin: 0;
   }
 
   .search {
     grid-area: search;
     width: 100%;
-    margin-top: 0;
   }
 
   .header-results {
@@ -1171,31 +1188,6 @@ tbody tr.results-row--selected {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-left: 8px;
-  }
-
-  .results-count {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    line-height: 1;
-    min-width: 60px;
-  }
-
-  .results-count .count-num {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--accent);
-  }
-
-  .results-count .count-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-    margin-top: 2px;
   }
 
   .search-row input {
