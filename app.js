@@ -1219,6 +1219,9 @@ function clearAll() {
   if (state.categorical.Status) {
     state.categorical.Status.add("MP");
   }
+  if (state.categorical["Automotive Grade"]) {
+    state.categorical["Automotive Grade"].add("Yes");
+  }
 
   state.selected = [];
   state.compareOnly = false;
