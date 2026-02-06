@@ -1365,8 +1365,9 @@ function updateSelectionPanel() {
   });
 
   const disabled = state.selected.length === 0;
-  elements.selectionPanel.style.display = disabled ? "none" : "grid";
-  elements.selectionTags.style.display = disabled ? "none" : "flex";
+  elements.selectionPanel.style.display = disabled ? "none" : "";
+  // Removed elements.selectionTags.style.display override to allow CSS Grid on mobile
+  // and ensured tag creation uses .selection-tag
   if (elements.compareButton) {
     elements.compareButton.disabled = disabled;
     if (disabled) {
