@@ -1016,13 +1016,14 @@ tbody tr:hover {
   }
 
   .topbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
     margin-bottom: 12px;
   }
 
   .topbar-content {
     padding: 12px;
-    column-gap: 12px;
+    column-gap: 16px;
     row-gap: 8px;
   }
 
@@ -1035,7 +1036,6 @@ tbody tr:hover {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 4px;
   }
 
   .search-label {
@@ -1047,32 +1047,41 @@ tbody tr:hover {
   }
 
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 16px;
+    align-items: start;
   }
 
   .sidebar {
-    position: relative;
-    top: 0;
-    max-height: none;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
     width: 100%;
     padding: 12px;
     box-shadow: none;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
   }
 
   .filters {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
     display: grid;
-    gap: 16px;
+    gap: 12px;
   }
 
   .filter-group {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+  }
+
+  .filter-group:first-child {
     padding-top: 0;
     border-top: none;
-    background: rgba(255, 255, 255, 0.4);
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
   }
 
   .results {
@@ -1085,7 +1094,7 @@ tbody tr:hover {
 
   .results-header {
     background: var(--panel);
-    padding: 12px;
+    padding: 8px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--line);
     margin-bottom: 8px;
@@ -1102,9 +1111,12 @@ tbody tr:hover {
     padding: 8px 10px;
   }
 
-  .topbar-controls {
-    flex-direction: row;
-    align-self: flex-start;
+  /* Make sure sticky columns in table line up visually with sidebar */
+  table th:nth-child(1),
+  table td:nth-child(1),
+  table th:nth-child(2),
+  table td:nth-child(2) {
+    background: #fff;
   }
 }
 
