@@ -1185,7 +1185,6 @@ function renderResults(rows) {
 }
 
 function applyFilters() {
-  updateDynamicNumericFilter("Max Height (mm)");
   let filtered = data.filter((row) => passesAll(row));
   if (state.compareOnly && state.selected.length > 0) {
     const selectedSet = new Set(state.selected);
@@ -1442,27 +1441,9 @@ btn.addEventListener('click', async () => {
 }
 
 function syncSidebarHeight() {
-  if (!elements.sidebar || !elements.topbarContent || !elements.resultsSection) return;
-  if (window.innerWidth <= 700) {
-    elements.sidebar.style.height = "";
-    elements.sidebar.style.marginTop = "";
-    return;
-  }
-  if (document.body.classList.contains("sidebar-hidden")) {
-    elements.sidebar.style.height = "";
-    elements.sidebar.style.marginTop = "";
-    return;
-  }
-  const topbarRect = elements.topbarContent.getBoundingClientRect();
-  const resultsRect = elements.resultsSection.getBoundingClientRect();
-  const gap = Math.max(resultsRect.top - topbarRect.bottom, 0);
-  const totalHeight = topbarRect.height + gap + resultsRect.height;
-  if (state.baseSidebarHeight === null || totalHeight > state.baseSidebarHeight) {
-    state.baseSidebarHeight = totalHeight;
-  }
-  const targetHeight = Math.max(totalHeight, state.baseSidebarHeight, 240);
-  elements.sidebar.style.height = `${targetHeight}px`;
-  elements.sidebar.style.marginTop = `-${topbarRect.height + gap}px`;
+  // Manual height/margin synchronization disabled to fix layout jumping.
+  // We now rely on CSS: position: sticky; top: 0; height: 100vh;
+  return;
 }
 
 prepareData();

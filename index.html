@@ -15,81 +15,81 @@
 
 <body>
   <div class="page">
-    <header class="topbar">
-      <div class="topbar-spacer"></div>
-      <div class="topbar-content">
-        <div class="topbar-controls">
-          <button id="sidebarToggle" class="icon-btn" type="button" aria-label="Toggle filters">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-          <button id="clearFiltersButton" class="icon-btn icon-btn--clear" type="button" aria-label="Clear filters">
-            ×
-          </button>
-        </div>
-        <div class="brand">
-          <div class="title">Inductor Selection Tool v2.6.a by Sam</div>
-          <div id="activeFilters" class="active-filters"></div>
-        </div>
-        <div class="search">
-          <div class="search-row">
-            <input id="searchInput" type="search" placeholder="Search Part Number, Series, Feature…"
-              autocomplete="off" />
-            <button id="clearButton" class="ghost" type="button">Clear all</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
-    <main class="layout">
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-title">Filters</div>
-          <div class="sidebar-actions">
-            <button id="sidebarClear" class="sidebar-clear" title="Clear all filters">Clear</button>
-            <button id="sidebarClose" class="sidebar-close" aria-label="Close filters">×</button>
-          </div>
-          <div class="sidebar-hint"></div>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Filters</div>
+        <div class="sidebar-actions">
+          <button id="sidebarClear" class="sidebar-clear" title="Clear all filters">Clear</button>
+          <button id="sidebarClose" class="sidebar-close" aria-label="Close filters">×</button>
         </div>
-        <div id="filters" class="filters"></div>
-      </aside>
+        <div class="sidebar-hint"></div>
+      </div>
+      <div id="filters" class="filters"></div>
+    </aside>
 
-      <section class="results">
-        <div class="results-header">
-          <div class="results-count" id="resultsCount">0 results</div>
-          <div class="results-hint"></div>
-        </div>
-        <div class="table-wrap">
-          <table id="resultsTable">
-            <thead>
-              <tr id="resultsHeaderRow"></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div id="emptyState" class="empty-state hidden">
-          No parts match the current filters. Try widening ranges or clearing a few tags.
-        </div>
-        <div id="selectionPanel" class="selection-panel">
-          <div class="selection-tags" id="selectionTags"></div>
-          <div class="selection-pill">
-            <div class="selection-clear">
-              <button id="clearSelectedButton" class="ghost" type="button">Clear Selected</button>
-            </div>
-            <div class="selection-divider" aria-hidden="true"></div>
-            <div class="selection-buttons">
-              <button id="compareButton" class="ghost" type="button">Compare PN</button>
-              <button id="exportButton" class="ghost btn-export" type="button">Export Table</button>
-              <button id="octopartButton" class="ghost btn-octopart" type="button">Octopart</button>
-              <button id="mouserButton" class="ghost btn-mouser" type="button">Mouser</button>
-              <button id="farnellButton" class="ghost btn-farnell" type="button">Farnell</button>
+    <div class="content-container">
+      <header class="topbar">
+        <div class="topbar-content">
+          <div class="topbar-controls">
+            <button id="sidebarToggle" class="icon-btn" type="button" aria-label="Toggle filters">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            <button id="clearFiltersButton" class="icon-btn icon-btn--clear" type="button" aria-label="Clear filters">
+              ×
+            </button>
+          </div>
+          <div class="brand">
+            <div class="title">Inductor Selection Tool v2.6.a by Sam</div>
+            <div id="activeFilters" class="active-filters"></div>
+          </div>
+          <div class="search">
+            <div class="search-row">
+              <input id="searchInput" type="search" placeholder="Search Part Number, Series, Feature…"
+                autocomplete="off" />
+              <button id="clearButton" class="ghost" type="button">Clear all</button>
             </div>
           </div>
         </div>
-      </section>
-    </main>
+      </header>
+
+      <main class="layout">
+        <section class="results">
+          <div class="results-header">
+            <div class="results-count">
+              <span id="resultsCount">0</span> Matches
+            </div>
+            <div id="emptyState" class="empty-state hidden">No inductors match your filters</div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="resultsTable">
+              <thead>
+                <tr id="resultsHeaderRow"></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div id="selectionPanel" class="selection-panel">
+            <div class="selection-tags" id="selectionTags"></div>
+            <div class="selection-pill">
+              <button id="clearSelectedButton" class="ghost" type="button">Clear Selected</button>
+              <div class="selection-divider" aria-hidden="true"></div>
+              <div class="selection-buttons">
+                <button id="compareButton" class="ghost" type="button">Compare PN</button>
+                <button id="exportButton" class="ghost btn-export" type="button">Export Table</button>
+                <button id="octopartButton" class="ghost btn-octopart" type="button">Octopart</button>
+                <button id="mouserButton" class="ghost btn-mouser" type="button">Mouser</button>
+                <button id="farnellButton" class="ghost btn-farnell" type="button">Farnell</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script src="data.js"></script>
