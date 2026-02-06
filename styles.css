@@ -57,7 +57,8 @@ body {
 
 .topbar-content {
   display: grid;
-  grid-template-columns: auto 1.2fr 1fr;
+  grid-template-columns: auto 1.2fr 1.2fr auto;
+  align-items: center;
   gap: 32px;
   padding: 24px;
   border-radius: var(--radius);
@@ -602,6 +603,13 @@ details.filter[open] .accordion-icon {
 .results-count {
   font-size: 18px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.header-results {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .results-hint {
@@ -1045,10 +1053,10 @@ tbody tr:hover {
     backdrop-filter: none;
     padding: 0;
     gap: 16px;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     grid-template-areas:
-      "controls brand"
-      "search search";
+      "controls brand results"
+      "search search search";
   }
 
   .topbar-controls {
@@ -1058,6 +1066,10 @@ tbody tr:hover {
 
   .brand {
     grid-area: brand;
+  }
+
+  .header-results {
+    grid-area: results;
   }
 
   .brand .title {

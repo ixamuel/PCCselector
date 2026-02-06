@@ -1180,7 +1180,7 @@ function renderResults(rows) {
     elements.resultsBody.appendChild(tr);
   });
 
-  elements.resultsCount.textContent = `${rows.length} result${rows.length === 1 ? "" : "s"}`;
+  elements.resultsCount.textContent = `${rows.length} Matches`;
   elements.emptyState.classList.toggle("hidden", rows.length !== 0);
 }
 
