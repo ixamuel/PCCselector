@@ -1096,13 +1096,39 @@ function renderResults(rows) {
       }
       if (column.type === "pn") {
         const pn = row["Part Number"];
+        const container = document.createElement("div");
+        container.className = "pn-container";
+
         const link = document.createElement("a");
         link.className = "pn-link";
         link.href = `https://octopart.com/de/search?q=${encodeURIComponent(pn)}`;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
         link.textContent = pn || "—";
-        td.appendChild(link);
+
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "copy-btn";
+        copyBtn.type = "button";
+        copyBtn.title = "Copy Part Number";
+        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+
+        copyBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          navigator.clipboard.writeText(pn).then(() => {
+            copyBtn.classList.add("copied");
+            const originalIcon = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            setTimeout(() => {
+              copyBtn.classList.remove("copied");
+              copyBtn.innerHTML = originalIcon;
+            }, 2000);
+          });
+        });
+
+        container.appendChild(link);
+        container.appendChild(copyBtn);
+        td.appendChild(container);
         tr.appendChild(td);
         return;
       }

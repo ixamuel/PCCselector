@@ -632,7 +632,8 @@ table th:nth-child(2),
 table td:nth-child(2) {
   position: sticky;
   left: 0;
-  background: inherit;
+  background: #fff;
+  /* Default cell background */
   z-index: 3;
 }
 
@@ -642,6 +643,8 @@ table td:nth-child(2) {
 }
 
 thead th:nth-child(2) {
+  background: #f0f5ff !important;
+  /* Force header color */
   z-index: 10;
 }
 
@@ -650,7 +653,7 @@ table td:nth-child(1) {
   position: sticky;
   left: -1px;
   /* To prevent gap */
-  background: inherit;
+  background: #fff;
   z-index: 3;
 }
 
@@ -660,6 +663,7 @@ table td:nth-child(1) {
 }
 
 thead th:nth-child(1) {
+  background: #f0f5ff !important;
   z-index: 10;
 }
 
@@ -715,6 +719,42 @@ tbody td {
 
 .pn-link:hover {
   color: var(--accent);
+}
+
+.pn-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: all 0.2s;
+  opacity: 0.4;
+}
+
+.copy-btn:hover {
+  background: rgba(0, 88, 163, 0.08);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.copy-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.copy-btn.copied {
+  color: #109650;
+  opacity: 1;
 }
 
 .status-tag {
