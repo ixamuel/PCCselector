@@ -438,6 +438,8 @@ details.filter[open] .accordion-icon {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  position: relative;
+  z-index: 10;
 }
 
 .range-inputs input {
@@ -978,7 +980,7 @@ tbody tr:hover {
   display: none;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 850px) {
   .topbar {
     grid-template-columns: 1fr;
   }
