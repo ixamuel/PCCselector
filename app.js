@@ -130,6 +130,7 @@ const elements = {
   selectionTags: document.getElementById("selectionTags"),
   compareButton: document.getElementById("compareButton"),
   exportButton: document.getElementById("exportButton"),
+  productsButton: document.getElementById("productsButton"),
   mouserButton: document.getElementById("mouserButton"),
   farnellButton: document.getElementById("farnellButton"),
   octopartButton: document.getElementById("octopartButton"),
@@ -1296,6 +1297,12 @@ function bindEvents() {
     });
   }
 
+  if (elements.productsButton) {
+    elements.productsButton.addEventListener("click", () => {
+      openProducts();
+    });
+  }
+
   if (elements.mouserButton) {
     elements.mouserButton.addEventListener("click", () => {
       openEachLink("https://www.mouser.de/c/?q=", "m=Panasonic");
@@ -1384,9 +1391,20 @@ function updateSelectionPanel() {
   }
   if (elements.clearSelectedButton) elements.clearSelectedButton.disabled = disabled;
   if (elements.exportButton) elements.exportButton.disabled = disabled;
+  if (elements.productsButton) elements.productsButton.disabled = disabled;
   if (elements.mouserButton) elements.mouserButton.disabled = disabled;
   if (elements.octopartButton) elements.octopartButton.disabled = disabled;
   if (elements.farnellButton) elements.farnellButton.disabled = disabled;
+}
+
+function openProducts() {
+  if (state.selected.length === 0) return;
+  state.selected.forEach((pn) => {
+    const row = dataByPn.get(pn);
+    if (row && row.URL) {
+      window.open(row.URL, "_blank");
+    }
+  });
 }
 
 function openEachLink(baseUrl, extraParams = "") {

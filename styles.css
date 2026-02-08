@@ -1009,6 +1009,12 @@ tbody td {
   color: #1d6f42 !important;
 }
 
+.selection-pill .btn-products {
+  background: rgba(0, 65, 192, 0.12) !important;
+  border-color: #0041C0 !important;
+  color: #0041C0 !important;
+}
+
 button.ghost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1329,7 +1335,7 @@ tbody tr.results-row--selected {
     right: 8px;
     width: auto;
     max-width: none;
-    bottom: 125px;
+    bottom: 155px;
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 4px;
@@ -1350,11 +1356,12 @@ tbody tr.results-row--selected {
     border: 1px solid var(--line);
     padding: 2px 4px;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 11.5px;
     min-width: 0;
   }
 
   .selection-tag span {
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1413,23 +1420,28 @@ tbody tr.results-row--selected {
     grid-row: 1;
   }
 
-  #octopartButton {
+  #productsButton {
     grid-column: 1;
     grid-row: 2;
   }
 
-  #mouserButton {
+  #octopartButton {
     grid-column: 2;
     grid-row: 2;
   }
 
-  #farnellButton {
+  #mouserButton {
     grid-column: 3;
     grid-row: 2;
   }
 
+  #farnellButton {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
   .selection-pill button {
-    font-size: 10px;
+    font-size: 11px;
     padding: 8px 2px;
     width: 100%;
     margin: 0 !important;
