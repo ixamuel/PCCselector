@@ -1,0 +1,355 @@
+<xml xmlns:v="urn:schemas-microsoft-com:vml"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel">
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="97,110,115,120,125"/>
+ </o:shapelayout><v:shapetype id="_x0000_t201" coordsize="21600,21600" o:spt="201"
+  path="m,l,21600r21600,l21600,xe">
+  <v:stroke joinstyle="miter"/>
+  <v:path shadowok="f" o:extrusionok="f" strokeok="f" fillok="f" o:connecttype="rect"/>
+  <o:lock v:ext="edit" shapetype="t"/>
+ </v:shapetype><v:shape id="_x0000_s99330" type="#_x0000_t201" style='position:absolute;
+  margin-left:11.4pt;margin-top:259.8pt;width:79.2pt;height:11.4pt;z-index:1;
+  mso-wrap-style:tight' o:button="t" fillcolor="buttonFace [67]" strokecolor="windowText [64]"
+  o:insetmode="auto">
+  <v:fill color2="buttonFace [67]" o:detectmouseclick="t"/>
+  <o:lock v:ext="edit" rotation="t"/>
+  <v:textbox style='mso-direction-alt:auto' o:singleclick="f">
+   <div style='text-align:center;direction:ltr'><font face="Segoe UI" size="180"
+   color="#000000"><b>Clear values</b></font></div>
+  </v:textbox>
+  <x:ClientData ObjectType="Button">
+   <x:Anchor>
+    7, 11, 36, 5, 9, 55, 36, 24</x:Anchor>
+   <x:PrintObject>False</x:PrintObject>
+   <x:AutoFill>False</x:AutoFill>
+   <x:FmlaMacro>[0]!DCDC_Clear.DCDC_Clear</x:FmlaMacro>
+   <x:TextHAlign>Center</x:TextHAlign>
+   <x:TextVAlign>Center</x:TextVAlign>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s99335" type="#_x0000_t201" style='position:absolute;
+  margin-left:444.6pt;margin-top:44.4pt;width:88.2pt;height:11.4pt;z-index:2;
+  mso-wrap-style:tight' o:button="t" fillcolor="buttonFace [67]" strokecolor="windowText [64]">
+  <v:fill color2="buttonFace [67]" o:detectmouseclick="t"/>
+  <o:lock v:ext="edit" rotation="t"/>
+  <v:textbox style='mso-direction-alt:auto' inset="0,0,0,0" o:singleclick="f">
+   <div style='text-align:center;direction:ltr'><font face="Segoe UI" size="180"
+   color="#000000"><b>Apply design values</b></font></div>
+  </v:textbox>
+  <x:ClientData ObjectType="Button">
+   <x:Anchor>
+    19, 3, 19, 4, 21, 10, 19, 23</x:Anchor>
+   <x:PrintObject>False</x:PrintObject>
+   <x:AutoFill>False</x:AutoFill>
+   <x:FmlaMacro>[0]!DCDC_TypApp.DCDC_TypApp</x:FmlaMacro>
+   <x:TextHAlign>Center</x:TextHAlign>
+   <x:TextVAlign>Center</x:TextVAlign>
+  </x:ClientData>
+ </v:shape><v:shapetype id="_x0000_t75" coordsize="21600,21600" o:spt="75"
+  o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+  <v:stroke joinstyle="miter"/>
+  <v:formulas>
+   <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+   <v:f eqn="sum @0 1 0"/>
+   <v:f eqn="sum 0 0 @1"/>
+   <v:f eqn="prod @2 1 2"/>
+   <v:f eqn="prod @3 21600 pixelWidth"/>
+   <v:f eqn="prod @3 21600 pixelHeight"/>
+   <v:f eqn="sum @0 0 1"/>
+   <v:f eqn="prod @6 1 2"/>
+   <v:f eqn="prod @7 21600 pixelWidth"/>
+   <v:f eqn="sum @8 21600 0"/>
+   <v:f eqn="prod @7 21600 pixelHeight"/>
+   <v:f eqn="sum @10 21600 0"/>
+  </v:formulas>
+  <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+  <o:lock v:ext="edit" aspectratio="t"/>
+ </v:shapetype><v:shape id="図_x0020_24" o:spid="_x0000_s128611" type="#_x0000_t75"
+  style='position:absolute;margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;
+  height:78.6pt;z-index:3;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId1" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="図_x0020_30" o:spid="_x0000_s128612" type="#_x0000_t75"
+  style='position:absolute;margin-left:447pt;margin-top:177.6pt;width:157.2pt;
+  height:78pt;z-index:4;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="図_x0020_9" o:spid="_x0000_s128613" type="#_x0000_t75"
+  style='position:absolute;margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;
+  height:39pt;z-index:5;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId3" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128614" type="#_x0000_t75" style='position:absolute;
+  margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;height:78.6pt;z-index:6;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128615" type="#_x0000_t75" style='position:absolute;
+  margin-left:447pt;margin-top:177.6pt;width:157.2pt;height:78pt;z-index:7;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128616" type="#_x0000_t75" style='position:absolute;
+  margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;height:39pt;z-index:8;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128617" type="#_x0000_t75" style='position:absolute;
+  margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;height:78.6pt;z-index:9;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128618" type="#_x0000_t75" style='position:absolute;
+  margin-left:447pt;margin-top:177.6pt;width:157.2pt;height:78pt;z-index:10;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128619" type="#_x0000_t75" style='position:absolute;
+  margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;height:39pt;z-index:11;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_1432" o:spid="_x0000_s128620" type="#_x0000_t75"
+  style='position:absolute;margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;
+  height:78.6pt;z-index:12;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_1433" o:spid="_x0000_s128621" type="#_x0000_t75"
+  style='position:absolute;margin-left:447pt;margin-top:177.6pt;width:157.2pt;
+  height:78pt;z-index:13;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_1434" o:spid="_x0000_s128622" type="#_x0000_t75"
+  style='position:absolute;margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;
+  height:39pt;z-index:14;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128623" type="#_x0000_t75" style='position:absolute;
+  margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;height:78.6pt;z-index:15;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128624" type="#_x0000_t75" style='position:absolute;
+  margin-left:447pt;margin-top:177.6pt;width:157.2pt;height:78pt;z-index:16;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128625" type="#_x0000_t75" style='position:absolute;
+  margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;height:39pt;z-index:17;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4686" o:spid="_x0000_s128626" type="#_x0000_t75"
+  style='position:absolute;margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;
+  height:78.6pt;z-index:18;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4687" o:spid="_x0000_s128627" type="#_x0000_t75"
+  style='position:absolute;margin-left:447pt;margin-top:177.6pt;width:157.2pt;
+  height:78pt;z-index:19;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4688" o:spid="_x0000_s128628" type="#_x0000_t75"
+  style='position:absolute;margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;
+  height:39pt;z-index:20;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4689" o:spid="_x0000_s128629" type="#_x0000_t75"
+  style='position:absolute;margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;
+  height:78.6pt;z-index:21;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4690" o:spid="_x0000_s128630" type="#_x0000_t75"
+  style='position:absolute;margin-left:447pt;margin-top:177.6pt;width:157.2pt;
+  height:78pt;z-index:22;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="Picture_x0020_4691" o:spid="_x0000_s128631" type="#_x0000_t75"
+  style='position:absolute;margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;
+  height:39pt;z-index:23;visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128632" type="#_x0000_t75" style='position:absolute;
+  margin-left:440.4pt;margin-top:81.6pt;width:160.2pt;height:78.6pt;z-index:24;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId4" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    18, 66, 21, 17, 22, 53, 26, 24</x:Anchor>
+   <x:FmlaPict>appimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128633" type="#_x0000_t75" style='position:absolute;
+  margin-left:447pt;margin-top:177.6pt;width:157.2pt;height:78pt;z-index:25;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId2" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    19, 7, 28, 3, 22, 59, 32, 25</x:Anchor>
+   <x:FmlaPict>boardimg</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape><v:shape id="_x0000_s128634" type="#_x0000_t75" style='position:absolute;
+  margin-left:382.2pt;margin-top:189.6pt;width:47.4pt;height:39pt;z-index:26;
+  visibility:visible;mso-wrap-style:square'>
+  <v:imagedata o:relid="rId5" o:title=""/>
+  <x:ClientData ObjectType="Pict">
+   <x:SizeWithCells/>
+   <x:Anchor>
+    17, 31, 28, 23, 18, 48, 31, 7</x:Anchor>
+   <x:FmlaPict>計算sheet!$AL$20:$AM$23</x:FmlaPict>
+   <x:CF>Pict</x:CF>
+   <x:Camera/>
+  </x:ClientData>
+ </v:shape></xml>
