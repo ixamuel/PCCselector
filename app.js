@@ -1444,24 +1444,27 @@ function formatDimensions(L, W, H) {
   return `${lengthFormatted} x ${widthFormatted} x ${heightFormatted}mm`;
 }
 
-function formatSummaryDesc(row) {
+function formatSummaryDesc(row, options = {}) {
   if (!row) return "";
+
+  // Default options: showBasicInfo = false (hide PCC, SMD, ±20%, AECQ-200)
+  const showBasicInfo = options.showBasicInfo !== undefined ? options.showBasicInfo : false;
 
   const parts = [];
 
-  // Category (PCC)
-  if (row.Category) parts.push(row.Category);
+  // Category (PCC) - hide if showBasicInfo is false
+  if (showBasicInfo && row.Category) parts.push(row.Category);
 
-  // Type (SMD)
-  if (row.Type) parts.push(row.Type);
+  // Type (SMD) - hide if showBasicInfo is false
+  if (showBasicInfo && row.Type) parts.push(row.Type);
 
   // Inductance (0.33µH) with tolerance directly after
   if (row["Lo (uH)"]) {
     const inductance = formatNumber(row["Lo (uH)"]);
     parts.push(`${inductance}µH`);
 
-    // Tolerance (±20%) - multiply by 100
-    if (row["Lo Tol. (%)"]) {
+    // Tolerance (±20%) - multiply by 100 - hide if showBasicInfo is false
+    if (showBasicInfo && row["Lo Tol. (%)"]) {
       const tolValue = toNumber(row["Lo Tol. (%)"]);
       if (tolValue !== null) {
         const tolPercent = tolValue * 100;
@@ -1494,7 +1497,7 @@ function formatSummaryDesc(row) {
     parts.push(dims);
   }
 
-  // Temperature Range (-40~+150°C)
+  // Temperature Range (-40~150°C)
   if (row["Temp Range (deg.C)"]) {
     const temp = formatTemperature(row["Temp Range (deg.C)"]);
     parts.push(temp);
@@ -1507,8 +1510,8 @@ function formatSummaryDesc(row) {
     parts.push(cleanedFeature);
   }
 
-  // Automotive Grade (AECQ-200 if Yes) - last position
-  if (row["Automotive Grade"] === "Yes") {
+  // Automotive Grade (AECQ-200 if Yes) - last position - hide if showBasicInfo is false
+  if (showBasicInfo && row["Automotive Grade"] === "Yes") {
     parts.push("AECQ-200");
   }
 
@@ -1532,10 +1535,17 @@ function openExportTable() {
   );
   const tsv = [header.join("\t"), ...bodyRows.map((r) => r.join("\t"))].join("\n");
 
-  // Generate summary data for each selected row
-  const summaryRows = rows.map((row) => ({
+  // Generate summary data for each selected row - two versions
+  const summaryRowsBasicHidden = rows.map((row) => ({
     pn: row["Part Number"] || "",
-    desc: formatSummaryDesc(row)
+    desc: formatSummaryDesc(row, { showBasicInfo: false }), // default: hidden
+    remarks: "" // empty remarks initially
+  }));
+
+  const summaryRowsBasicShown = rows.map((row) => ({
+    pn: row["Part Number"] || "",
+    desc: formatSummaryDesc(row, { showBasicInfo: true }), // when toggle ON
+    remarks: "" // empty remarks initially
   }));
 
   const html = `<!doctype html>
@@ -1550,6 +1560,50 @@ th{background:#f0f2f4}
 .summary-table { margin-top: 32px; }
 .summary-table th { background: #e8f0fb; }
 .summary-header { margin-top: 40px; margin-bottom: 12px; font-size: 16px; font-weight: 600; color: #0058a3; }
+/* Toggle switch styles */
+.toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.toggle-label { font-size: 14px; color: #555; }
+.toggle-switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 24px; transition: .3s; }
+.toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s; }
+.toggle-checkbox:checked + .toggle-slider { background-color: #0058a3; }
+.toggle-checkbox:checked + .toggle-slider:before { transform: translateX(26px); }
+.toggle-checkbox { display: none; }
+
+/* Remarks editable cell styling */
+td.remarks-column[contenteditable="true"] {
+  padding: 6px 8px;
+  min-height: 32px;
+  cursor: text;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+td.remarks-column[contenteditable="true"]:focus {
+  outline: none;
+  border-color: #0058a3;
+  box-shadow: 0 0 0 2px rgba(0, 88, 163, 0.1);
+  background: #f8fbff;
+}
+td.remarks-column[contenteditable="true"]:empty:before {
+  content: "Enter remarks";
+  color: #999;
+  font-style: italic;
+}
+
+/* Table column widths */
+.summary-table th:nth-child(1) { width: 120px; } /* PN */
+.summary-table th:nth-child(2) { width: auto; }   /* Description */
+.summary-table th:nth-child(3) { width: 200px; }  /* Remarks */
+
+/* Remarks column visibility */
+.summary-table.hide-remarks .remarks-column,
+.summary-table.hide-remarks th.remarks-column,
+.summary-table.hide-remarks td.remarks-column {
+  display: none;
+}
 </style>
 </head><body>
 <button id="copyBtn">Copy to Clipboard</button>
@@ -1559,10 +1613,24 @@ th{background:#f0f2f4}
       .join("")}</tbody></table>
 
 <div class="summary-header">Part Number Summary</div>
+<div class="toggle-container">
+  <span class="toggle-label">Show PCC, SMD, Tol., Automotive</span>
+  <label class="toggle-switch">
+    <input type="checkbox" class="toggle-checkbox" id="basicInfoToggle">
+    <span class="toggle-slider"></span>
+  </label>
+</div>
+<div class="toggle-container">
+  <span class="toggle-label">Show Remarks Column</span>
+  <label class="toggle-switch">
+    <input type="checkbox" class="toggle-checkbox" id="remarksToggle">
+    <span class="toggle-slider"></span>
+  </label>
+</div>
 <table class="summary-table">
-<thead><tr><th>PN</th><th>Description</th></tr></thead>
-<tbody>${summaryRows
-      .map((r) => `<tr><td>${r.pn}</td><td>${r.desc}</td></tr>`)
+<thead><tr><th>PN</th><th>Description</th><th class="remarks-column">Remarks</th></tr></thead>
+<tbody id="summaryTableBody">${summaryRowsBasicHidden
+      .map((r) => `<tr><td>${r.pn}</td><td class="desc-cell">${r.desc}</td><td class="remarks-column" contenteditable="true" data-pn="${r.pn}">${r.remarks}</td></tr>`)
       .join("")}</tbody></table>
 
 <script>
@@ -1572,6 +1640,57 @@ btn.addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(tsv); btn.textContent = 'Copied'; }
   catch (e) { btn.textContent = 'Copy failed'; }
 });
+
+// Toggle functionality
+const basicInfoToggle = document.getElementById('basicInfoToggle');
+const remarksToggle = document.getElementById('remarksToggle');
+const summaryTableBody = document.getElementById('summaryTableBody');
+const summaryTable = document.querySelector('.summary-table');
+const summaryRowsBasicHidden = ${JSON.stringify(summaryRowsBasicHidden)};
+const summaryRowsBasicShown = ${JSON.stringify(summaryRowsBasicShown)};
+
+function updateSummaryTable(showBasicInfo) {
+  // Collect current remarks before updating
+  const remarkCells = document.querySelectorAll('td.remarks-column[contenteditable="true"]');
+  const remarksMap = {};
+  remarkCells.forEach(cell => {
+    remarksMap[cell.dataset.pn] = cell.textContent.trim();
+  });
+  
+  const rows = showBasicInfo ? summaryRowsBasicShown : summaryRowsBasicHidden;
+  // Update remarks in rows with saved values
+  rows.forEach(r => {
+    if (remarksMap[r.pn] !== undefined) {
+      r.remarks = remarksMap[r.pn];
+    }
+  });
+  
+  summaryTableBody.innerHTML = rows.map(r =>
+    '<tr><td>' + r.pn + '</td><td class="desc-cell">' + r.desc + '</td><td class="remarks-column" contenteditable="true" data-pn="' + r.pn + '">' + (r.remarks || '') + '</td></tr>'
+  ).join('');
+}
+
+function updateRemarksColumnVisibility(showRemarks) {
+  if (showRemarks) {
+    summaryTable.classList.remove('hide-remarks');
+  } else {
+    summaryTable.classList.add('hide-remarks');
+  }
+}
+
+basicInfoToggle.addEventListener('change', (e) => {
+  updateSummaryTable(e.target.checked);
+});
+
+remarksToggle.addEventListener('change', (e) => {
+  updateRemarksColumnVisibility(e.target.checked);
+});
+
+// Initialize with toggles OFF (basic info hidden, remarks hidden)
+basicInfoToggle.checked = false;
+remarksToggle.checked = false;
+updateSummaryTable(false);
+updateRemarksColumnVisibility(false);
 </script>
 </body></html>`;
   const win = window.open("", "_blank");
