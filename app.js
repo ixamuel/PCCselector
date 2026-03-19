@@ -162,7 +162,8 @@ function formatNumber(value) {
 function displayCategoryValue(value) {
   if (value === null || value === undefined) return "—";
   const text = String(value);
-  return text.replace(/^_+/, "").trim();
+  // Remove leading underscores and square symbol (□) from "High Current (≥□12)"
+  return text.replace(/^_+/, "").replace(/□/g, "").trim();
 }
 
 function formatSizeValue(value) {
@@ -1416,6 +1417,104 @@ function openEachLink(baseUrl, extraParams = "") {
   });
 }
 
+// Helper functions for summary table formatting
+function formatTemperature(tempRange) {
+  if (!tempRange) return "";
+  // Convert "to" to "~", remove + signs, and ensure °C is present
+  let formatted = tempRange
+    .replace(/\s*to\s*/g, "~")
+    .replace(/deg\.C/g, "°C")
+    .replace(/\+/g, "")  // Remove any + signs
+    .trim();
+
+  // Ensure °C is at the end if not already present
+  if (!formatted.includes("°C")) {
+    formatted += "°C";
+  }
+
+  return formatted;
+}
+
+function formatDimensions(L, W, H) {
+  if (!L || !W || !H) return "";
+  // Use period for decimal (not comma)
+  const lengthFormatted = String(L);
+  const widthFormatted = String(W);
+  const heightFormatted = String(H);
+  return `${lengthFormatted} x ${widthFormatted} x ${heightFormatted}mm`;
+}
+
+function formatSummaryDesc(row) {
+  if (!row) return "";
+
+  const parts = [];
+
+  // Category (PCC)
+  if (row.Category) parts.push(row.Category);
+
+  // Type (SMD)
+  if (row.Type) parts.push(row.Type);
+
+  // Inductance (0.33µH) with tolerance directly after
+  if (row["Lo (uH)"]) {
+    const inductance = formatNumber(row["Lo (uH)"]);
+    parts.push(`${inductance}µH`);
+
+    // Tolerance (±20%) - multiply by 100
+    if (row["Lo Tol. (%)"]) {
+      const tolValue = toNumber(row["Lo Tol. (%)"]);
+      if (tolValue !== null) {
+        const tolPercent = tolValue * 100;
+        parts.push(`±${formatNumber(tolPercent)}%`);
+      }
+    }
+  }
+
+  // Irms (Method B current)
+  if (row["Method B (A typ at 40℃)"]) {
+    const irms = formatNumber(row["Method B (A typ at 40℃)"]);
+    parts.push(`Irms ${irms}A`);
+  }
+
+  // Isat (ΔL -30%)
+  if (row["⊿L=-30% typ (A)"]) {
+    const isat = formatNumber(row["⊿L=-30% typ (A)"]);
+    parts.push(`Isat ${isat}A`);
+  }
+
+  // DCR only (R: 1.1mΩ)
+  if (row["DCR Typ (mOhm)"]) {
+    const dcr = formatNumber(row["DCR Typ (mOhm)"]);
+    parts.push(`R: ${dcr}mΩ`);
+  }
+
+  // Dimensions (10.9 x 10 x 5mm) - before temperature
+  if (row["L (mm)"] && row["W (mm)"] && row["Max Height (mm)"]) {
+    const dims = formatDimensions(row["L (mm)"], row["W (mm)"], row["Max Height (mm)"]);
+    parts.push(dims);
+  }
+
+  // Temperature Range (-40~+150°C)
+  if (row["Temp Range (deg.C)"]) {
+    const temp = formatTemperature(row["Temp Range (deg.C)"]);
+    parts.push(temp);
+  }
+
+  // Feature (High Isat (Standard))
+  if (row.Feature) {
+    // Remove square symbol (□) from Feature values
+    const cleanedFeature = row.Feature.replace(/□/g, "");
+    parts.push(cleanedFeature);
+  }
+
+  // Automotive Grade (AECQ-200 if Yes) - last position
+  if (row["Automotive Grade"] === "Yes") {
+    parts.push("AECQ-200");
+  }
+
+  return parts.join(", ");
+}
+
 function openExportTable() {
   if (state.selected.length === 0) return;
   const rows = state.selected
@@ -1433,6 +1532,12 @@ function openExportTable() {
   );
   const tsv = [header.join("\t"), ...bodyRows.map((r) => r.join("\t"))].join("\n");
 
+  // Generate summary data for each selected row
+  const summaryRows = rows.map((row) => ({
+    pn: row["Part Number"] || "",
+    desc: formatSummaryDesc(row)
+  }));
+
   const html = `<!doctype html>
 <html><head><meta charset="utf-8" />
 <title>Selected Inductors</title>
@@ -1442,6 +1547,9 @@ button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;
 table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:left}
 th{background:#f0f2f4}
+.summary-table { margin-top: 32px; }
+.summary-table th { background: #e8f0fb; }
+.summary-header { margin-top: 40px; margin-bottom: 12px; font-size: 16px; font-weight: 600; color: #0058a3; }
 </style>
 </head><body>
 <button id="copyBtn">Copy to Clipboard</button>
@@ -1449,6 +1557,14 @@ th{background:#f0f2f4}
 <tbody>${bodyRows
       .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
       .join("")}</tbody></table>
+
+<div class="summary-header">Part Number Summary</div>
+<table class="summary-table">
+<thead><tr><th>PN</th><th>Description</th></tr></thead>
+<tbody>${summaryRows
+      .map((r) => `<tr><td>${r.pn}</td><td>${r.desc}</td></tr>`)
+      .join("")}</tbody></table>
+
 <script>
 const tsv = ${JSON.stringify(tsv)};
 const btn = document.getElementById('copyBtn');
