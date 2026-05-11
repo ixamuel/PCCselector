@@ -1439,18 +1439,18 @@ tbody tr.results-row--selected {
   }
 
   #productsButton {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  #octopartButton {
     grid-column: 2;
     grid-row: 2;
   }
 
-  #mouserButton {
+  #octopartButton {
     grid-column: 3;
     grid-row: 2;
+  }
+
+  #mouserButton {
+    grid-column: 1;
+    grid-row: 3;
   }
 
   #farnellButton {

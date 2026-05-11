@@ -1555,7 +1555,10 @@ function openExportTable() {
     .map((pn) => dataByPn.get(pn))
     .filter(Boolean);
   const exportColumns = resultColumns.filter((col) => col.type !== "select");
-  const header = exportColumns.map((col) => `${col.label}${col.sub ? " " + col.sub : ""}`);
+  const header = exportColumns.map((col) => {
+    if (col.key === "Automotive Grade") return "AECQ-200";
+    return `${col.label}${col.sub ? " " + col.sub : ""}`;
+  });
   const bodyRows = rows.map((row) =>
     exportColumns.map((col) => {
       if (col.type === "pn") return row["Part Number"] || "";
