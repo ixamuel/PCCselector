@@ -1015,6 +1015,19 @@ tbody td {
   color: #0041C0 !important;
 }
 
+.selection-pill .btn-copy-pns {
+  background: rgba(0, 88, 163, 0.12) !important;
+  border-color: rgba(0, 88, 163, 0.4) !important;
+  color: var(--accent) !important;
+  min-width: 90px;
+}
+
+.selection-pill .btn-copy-pns.copied {
+  background: rgba(16, 150, 80, 0.15) !important;
+  border-color: rgba(16, 150, 80, 0.4) !important;
+  color: #0a7a3f !important;
+}
+
 button.ghost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1415,9 +1428,14 @@ tbody tr.results-row--selected {
     grid-row: 1;
   }
 
-  #exportButton {
+  #copyPnsButton {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  #exportButton {
+    grid-column: 1;
+    grid-row: 2;
   }
 
   #productsButton {

@@ -129,6 +129,7 @@ const elements = {
   selectionPanel: document.getElementById("selectionPanel"),
   selectionTags: document.getElementById("selectionTags"),
   compareButton: document.getElementById("compareButton"),
+  copyPnsButton: document.getElementById("copyPnsButton"),
   exportButton: document.getElementById("exportButton"),
   productsButton: document.getElementById("productsButton"),
   mouserButton: document.getElementById("mouserButton"),
@@ -1166,7 +1167,13 @@ function renderResults(rows) {
           td.innerHTML = `<span class="value-main">${formatNumber(value)}</span><span class="${deltaClass}">${deltaText}</span>`;
         }
       } else if (column.type === "number") {
-        td.textContent = formatNumber(row[column.key]);
+        // Convert tolerance from decimal (0.2) to percentage (20%)
+        if (column.key === "Lo Tol. (%)") {
+          const val = toNumber(row[column.key]);
+          td.textContent = val !== null ? String(Math.round(val * 100)) : "—";
+        } else {
+          td.textContent = formatNumber(row[column.key]);
+        }
       } else if (column.type === "size") {
         td.textContent = formatSizeValue(row[column.key]);
       } else if (column.key === "Status") {
@@ -1292,6 +1299,12 @@ function bindEvents() {
     });
   }
 
+  if (elements.copyPnsButton) {
+    elements.copyPnsButton.addEventListener("click", () => {
+      copySelectedPartNumbers();
+    });
+  }
+
   if (elements.exportButton) {
     elements.exportButton.addEventListener("click", () => {
       openExportTable();
@@ -1391,6 +1404,7 @@ function updateSelectionPanel() {
     }
   }
   if (elements.clearSelectedButton) elements.clearSelectedButton.disabled = disabled;
+  if (elements.copyPnsButton) elements.copyPnsButton.disabled = disabled;
   if (elements.exportButton) elements.exportButton.disabled = disabled;
   if (elements.productsButton) elements.productsButton.disabled = disabled;
   if (elements.mouserButton) elements.mouserButton.disabled = disabled;
@@ -1414,6 +1428,23 @@ function openEachLink(baseUrl, extraParams = "") {
     const query = encodeURIComponent(pn);
     const url = extraParams ? `${baseUrl}${query}&${extraParams}` : `${baseUrl}${query}`;
     window.open(url, "_blank");
+  });
+}
+
+function copySelectedPartNumbers() {
+  if (state.selected.length === 0) return;
+  const pns = state.selected.join("\n");
+  navigator.clipboard.writeText(pns).then(() => {
+    // Provide brief visual feedback on the button
+    if (elements.copyPnsButton) {
+      const originalText = elements.copyPnsButton.textContent;
+      elements.copyPnsButton.textContent = "Copied!";
+      elements.copyPnsButton.classList.add("copied");
+      setTimeout(() => {
+        elements.copyPnsButton.textContent = originalText;
+        elements.copyPnsButton.classList.remove("copied");
+      }, 2000);
+    }
   });
 }
 
@@ -1528,13 +1559,18 @@ function openExportTable() {
   const bodyRows = rows.map((row) =>
     exportColumns.map((col) => {
       if (col.type === "pn") return row["Part Number"] || "";
-      if (col.type === "number") return formatNumber(row[col.key]);
+      if (col.type === "number") {
+        // Convert tolerance from decimal (0.2) to percentage (20%)
+        if (col.key === "Lo Tol. (%)") {
+          const val = toNumber(row[col.key]);
+          return val !== null ? String(Math.round(val * 100)) : "—";
+        }
+        return formatNumber(row[col.key]);
+      }
       if (col.type === "size") return formatSizeValue(row[col.key]);
       return displayCategoryValue(row[col.key]);
     })
   );
-  const tsv = [header.join("\t"), ...bodyRows.map((r) => r.join("\t"))].join("\n");
-
   // Generate summary data for each selected row - two versions
   const summaryRowsBasicHidden = rows.map((row) => ({
     pn: row["Part Number"] || "",
@@ -1553,7 +1589,7 @@ function openExportTable() {
 <title>Selected Inductors</title>
 <style>
 body{font-family:Arial,sans-serif;padding:24px;background:#f6f7f9;color:#111}
-button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;margin-bottom:12px}
+button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;margin-bottom:12px;min-width:100px}
 table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:left}
 th{background:#f0f2f4}
@@ -1604,12 +1640,30 @@ td.remarks-column[contenteditable="true"]:empty:before {
 .summary-table.hide-remarks td.remarks-column {
   display: none;
 }
+/* Extra columns toggle */
+.extra-cols-hidden th.extra-col,
+.extra-cols-hidden td.extra-col {
+  display: none;
+}
 </style>
 </head><body>
-<button id="copyBtn">Copy to Clipboard</button>
-<table><thead><tr>${header.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
+<button id="copyPnsBtn" style="margin-bottom:12px">Copy PNs</button>
+<div class="toggle-container">
+  <span class="toggle-label">Show Tol %, I (⊿T=40C) Method A A, Isat ΔL -20% A, DCR Max mΩ</span>
+  <label class="toggle-switch">
+    <input type="checkbox" class="toggle-checkbox" id="extraColsToggle">
+    <span class="toggle-slider"></span>
+  </label>
+</div>
+<table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
+  const extraCols = new Set([2, 4, 6, 8]);
+  return `<th${extraCols.has(i) ? ' class="extra-col"' : ''}>${h}</th>`;
+}).join("")}</tr></thead>
 <tbody>${bodyRows
-      .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
+      .map((r) => `<tr>${r.map((c, i) => {
+        const extraCols = new Set([2, 4, 6, 8]);
+        return `<td${extraCols.has(i) ? ' class="extra-col"' : ''}>${c}</td>`;
+      }).join("")}</tr>`)
       .join("")}</tbody></table>
 
 <div class="summary-header">Part Number Summary</div>
@@ -1634,11 +1688,18 @@ td.remarks-column[contenteditable="true"]:empty:before {
       .join("")}</tbody></table>
 
 <script>
-const tsv = ${JSON.stringify(tsv)};
-const btn = document.getElementById('copyBtn');
-btn.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(tsv); btn.textContent = 'Copied'; }
-  catch (e) { btn.textContent = 'Copy failed'; }
+const pnsList = ${JSON.stringify(rows.map(r => r["Part Number"] || "").filter(Boolean))};
+
+function resetCopyBtn(btn, originalText) {
+  setTimeout(() => { btn.textContent = originalText; }, 2000);
+}
+
+const copyPnsBtn = document.getElementById('copyPnsBtn');
+copyPnsBtn.addEventListener('click', async () => {
+  const original = copyPnsBtn.textContent;
+  try { await navigator.clipboard.writeText(pnsList.join('\\n')); copyPnsBtn.textContent = 'Copied!'; }
+  catch (e) { copyPnsBtn.textContent = 'Copy failed'; }
+  resetCopyBtn(copyPnsBtn, original);
 });
 
 // Toggle functionality
@@ -1678,6 +1739,16 @@ function updateRemarksColumnVisibility(showRemarks) {
   }
 }
 
+const extraColsToggle = document.getElementById('extraColsToggle');
+const mainDataTable = document.getElementById('mainDataTable');
+extraColsToggle.addEventListener('change', (e) => {
+  if (e.target.checked) {
+    mainDataTable.classList.remove('extra-cols-hidden');
+  } else {
+    mainDataTable.classList.add('extra-cols-hidden');
+  }
+});
+
 basicInfoToggle.addEventListener('change', (e) => {
   updateSummaryTable(e.target.checked);
 });
@@ -1686,7 +1757,8 @@ remarksToggle.addEventListener('change', (e) => {
   updateRemarksColumnVisibility(e.target.checked);
 });
 
-// Initialize with toggles OFF (basic info hidden, remarks hidden)
+// Initialize with toggles OFF (basic info hidden, remarks hidden, extra cols hidden)
+extraColsToggle.checked = false;
 basicInfoToggle.checked = false;
 remarksToggle.checked = false;
 updateSummaryTable(false);
