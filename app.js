@@ -1554,7 +1554,10 @@ function openExportTable() {
   const rows = state.selected
     .map((pn) => dataByPn.get(pn))
     .filter(Boolean);
-  const exportColumns = resultColumns.filter((col) => col.type !== "select");
+  // Filter out select column and Max Height (merged into Size)
+  const exportColumns = resultColumns.filter(
+    (col) => col.type !== "select" && col.key !== "Max Height (mm)"
+  );
   const header = exportColumns.map((col) => {
     if (col.key === "Automotive Grade") return "AECQ-200";
     return `${col.label}${col.sub ? " " + col.sub : ""}`;
@@ -1570,7 +1573,14 @@ function openExportTable() {
         }
         return formatNumber(row[col.key]);
       }
-      if (col.type === "size") return formatSizeValue(row[col.key]);
+      if (col.type === "size") {
+        // Integrate Max Height into Size: "L x W x Max H" with comma decimals
+        const L = row["L (mm)"] ? String(row["L (mm)"]).replace(/\./g, ",") : "";
+        const W = row["W (mm)"] ? String(row["W (mm)"]).replace(/\./g, ",") : "";
+        const H = row["Max Height (mm)"] ? String(row["Max Height (mm)"]).replace(/\./g, ",") : "";
+        if (L && W && H) return `${L} x ${W} x ${H}`;
+        return formatSizeValue(row[col.key]);
+      }
       return displayCategoryValue(row[col.key]);
     })
   );
@@ -1660,7 +1670,12 @@ td.remarks-column[contenteditable="true"]:empty:before {
 </div>
 <table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
   const extraCols = new Set([2, 4, 6, 8]);
-  return `<th${extraCols.has(i) ? ' class="extra-col"' : ''}>${h}</th>`;
+  const extraCls = extraCols.has(i) ? 'extra-col' : '';
+  // Method B column is at index 3; render with toggleable sub text
+  if (i === 3) {
+    return `<th class="${extraCls} method-b-header"><div class="th-top"><span>I (⊿T=40C)</span></div><div class="th-sub"><span class="method-b-sub">Method B A</span></div></th>`;
+  }
+  return `<th${extraCls ? ' class="' + extraCls + '"' : ''}>${h}</th>`;
 }).join("")}</tr></thead>
 <tbody>${bodyRows
       .map((r) => `<tr>${r.map((c, i) => {
@@ -1744,28 +1759,49 @@ function updateRemarksColumnVisibility(showRemarks) {
 
 const extraColsToggle = document.getElementById('extraColsToggle');
 const mainDataTable = document.getElementById('mainDataTable');
+
+function updateMethodBHeader(showExtra) {
+  const subSpan = mainDataTable.querySelector('th.method-b-header .method-b-sub');
+  if (!subSpan) return;
+  // When extra cols are hidden (toggle OFF), remove "Method B" from the sub text
+  // When extra cols are shown (toggle ON), show full "Method B A" to distinguish from Method A
+  subSpan.textContent = showExtra ? 'Method B A' : 'A';
+}
+
 extraColsToggle.addEventListener('change', (e) => {
+  localStorage.setItem('pcc_export_extraCols', e.target.checked);
   if (e.target.checked) {
     mainDataTable.classList.remove('extra-cols-hidden');
   } else {
     mainDataTable.classList.add('extra-cols-hidden');
   }
+  updateMethodBHeader(e.target.checked);
 });
 
 basicInfoToggle.addEventListener('change', (e) => {
+  localStorage.setItem('pcc_export_basicInfo', e.target.checked);
   updateSummaryTable(e.target.checked);
 });
 
 remarksToggle.addEventListener('change', (e) => {
+  localStorage.setItem('pcc_export_remarks', e.target.checked);
   updateRemarksColumnVisibility(e.target.checked);
 });
 
-// Initialize with toggles OFF (basic info hidden, remarks hidden, extra cols hidden)
-extraColsToggle.checked = false;
-basicInfoToggle.checked = false;
-remarksToggle.checked = false;
-updateSummaryTable(false);
-updateRemarksColumnVisibility(false);
+// Initialize with localStorage-persisted toggle states
+const savedExtraCols = localStorage.getItem('pcc_export_extraCols');
+const savedBasicInfo = localStorage.getItem('pcc_export_basicInfo');
+const savedRemarks = localStorage.getItem('pcc_export_remarks');
+
+extraColsToggle.checked = savedExtraCols === 'true';
+basicInfoToggle.checked = savedBasicInfo === 'true';
+remarksToggle.checked = savedRemarks === 'true';
+
+// Apply initial states
+if (extraColsToggle.checked) mainDataTable.classList.remove('extra-cols-hidden');
+updateSummaryTable(basicInfoToggle.checked);
+updateRemarksColumnVisibility(remarksToggle.checked);
+updateMethodBHeader(extraColsToggle.checked);
 </script>
 </body></html>`;
   const win = window.open("", "_blank");
