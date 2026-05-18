@@ -1574,10 +1574,10 @@ function openExportTable() {
         return formatNumber(row[col.key]);
       }
       if (col.type === "size") {
-        // Integrate Max Height into Size: "L x W x Max H" with comma decimals
-        const L = row["L (mm)"] ? String(row["L (mm)"]).replace(/\./g, ",") : "";
-        const W = row["W (mm)"] ? String(row["W (mm)"]).replace(/\./g, ",") : "";
-        const H = row["Max Height (mm)"] ? String(row["Max Height (mm)"]).replace(/\./g, ",") : "";
+        // Integrate Max Height into Size: "L x W x Max H"
+        const L = row["L (mm)"] ? String(row["L (mm)"]) : "";
+        const W = row["W (mm)"] ? String(row["W (mm)"]) : "";
+        const H = row["Max Height (mm)"] ? String(row["Max Height (mm)"]) : "";
         if (L && W && H) return `${L} x ${W} x ${H}`;
         return formatSizeValue(row[col.key]);
       }
