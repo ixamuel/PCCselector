@@ -1671,9 +1671,9 @@ td.remarks-column[contenteditable="true"]:empty:before {
 <table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
   const extraCols = new Set([2, 4, 6, 8]);
   const extraCls = extraCols.has(i) ? 'extra-col' : '';
-  // Method B column is at index 3; render with toggleable sub text
+  // Method B column is at index 3; render with toggleable sub text inline
   if (i === 3) {
-    return `<th class="${extraCls} method-b-header"><div class="th-top"><span>I (⊿T=40C)</span></div><div class="th-sub"><span class="method-b-sub">Method B A</span></div></th>`;
+    return `<th class="${extraCls} method-b-header">I (⊿T=40C) <span class="method-b-sub">Method B A</span></th>`;
   }
   return `<th${extraCls ? ' class="' + extraCls + '"' : ''}>${h}</th>`;
 }).join("")}</tr></thead>
