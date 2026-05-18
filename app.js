@@ -172,7 +172,7 @@ function formatSizeValue(value) {
   const text = String(value).trim();
   if (!text) return "—";
   if (text.includes("x") || text.includes("×")) {
-    return text.replace(/\./g, ",");
+    return text.replace(/,/g, ".");
   }
   const num = toNumber(text);
   if (num === null) return text;
