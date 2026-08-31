@@ -1730,6 +1730,14 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   color: #999;
   font-style: italic;
 }
+/* The Datasheet cell is intentionally read-only so its link stays clickable;
+   give it the same neutral surface as the editable competitor cells. */
+td.competitor-cell.datasheet-cell {
+  padding: 6px 8px;
+  min-height: 32px;
+  box-sizing: border-box;
+  background: #fff;
+}
 /* The control rail is a sibling of the table content.  It never participates
    in a table selection, so manual copy/paste to Outlook remains clean. */
 #mainTableWrap {
