@@ -1633,6 +1633,16 @@ th{background:#f0f2f4}
    The export tables retain their original presentation for Outlook copying. */
 .export-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .export-toolbar button { margin-bottom: 0; }
+.export-toolbar .copy-action {
+  background: rgba(0, 88, 163, 0.12);
+  border-color: rgba(0, 88, 163, 0.4);
+  color: #0058a3;
+}
+.export-toolbar .copy-action:hover {
+  background: rgba(0, 88, 163, 0.18);
+  border-color: #0058a3;
+  color: #0058a3;
+}
 .export-toolbar .toolbar-separator { width: 1px; height: 24px; background: #d7dce2; margin: 0 2px; }
 .export-toolbar .toolbar-hint { color: #69727d; font-size: 12px; margin-left: 2px; }
 .summary-section { margin: 0 36px 0 30px; }
@@ -1816,10 +1826,24 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   color: #8b0000;
   box-shadow: 0 2px 8px rgba(163, 51, 51, 0.3);
 }
+@media (max-width: 700px), (pointer: coarse) {
+  body { padding: 14px; }
+  .export-toolbar { gap: 6px; }
+  .export-toolbar button { min-height: 40px; }
+  .export-toolbar .toolbar-hint { width: 100%; margin: 0 0 4px; }
+  .toggle-container { align-items: flex-start; }
+  #mainTableWrap { padding: 0 42px; }
+  .summary-section { margin: 0 42px; }
+  .row-control-rail, .row-remove-rail { width: 42px; }
+  .row-grip { left: 3px; width: 36px; height: 40px; touch-action: none; }
+  .remove-competitor-btn { left: 3px; width: 36px; height: 40px; font-size: 21px; }
+  .drop-indicator { left: 42px; right: 42px; }
+}
 </style>
 </head><body>
 <div class="export-toolbar">
-<button id="copyPnsBtn">Copy PNs</button>
+<button id="copyPnsBtn" class="copy-action">Copy PNs</button>
+<button id="copyTableBtn" class="copy-action">Copy Table</button>
 <button id="addCompetitorBtn">Add Competitor</button>
 <button id="clearCompetitorsBtn">Clear Competitors</button>
 <span class="toolbar-separator" aria-hidden="true"></span>
@@ -1945,6 +1969,73 @@ copyPnsBtn.addEventListener('click', async function () {
   try { await navigator.clipboard.writeText(getPnsList().join('\\n')); copyPnsBtn.textContent = 'Copied!'; }
   catch (e) { copyPnsBtn.textContent = 'Copy failed'; }
   resetCopyBtn(copyPnsBtn, original);
+});
+
+function buildOutlookTable() {
+  const headerRow = mainDataTable.tHead.rows[0];
+  const visibleColumns = Array.from(headerRow.cells).map(function (cell, index) {
+    return getComputedStyle(cell).display !== 'none' ? index : -1;
+  }).filter(function (index) { return index !== -1; });
+  const output = document.createElement('table');
+  output.style.cssText = 'border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px;color:#111;background:#fff;';
+  const plainRows = [];
+
+  Array.from(mainDataTable.rows).forEach(function (sourceRow, rowIndex) {
+    const outputRow = document.createElement('tr');
+    const plainCells = [];
+    visibleColumns.forEach(function (columnIndex) {
+      const sourceCell = sourceRow.cells[columnIndex];
+      if (!sourceCell) return;
+      const cell = sourceCell.cloneNode(true);
+      cell.removeAttribute('contenteditable');
+      cell.querySelectorAll('[contenteditable]').forEach(function (element) { element.removeAttribute('contenteditable'); });
+      cell.style.cssText = 'border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top;';
+      if (rowIndex === 0) cell.style.background = '#f0f2f4';
+      outputRow.appendChild(cell);
+      plainCells.push(sourceCell.innerText.trim());
+    });
+    output.appendChild(outputRow);
+    plainRows.push(plainCells.join('\\t'));
+  });
+
+  return { html: output.outerHTML, text: plainRows.join('\\n') };
+}
+
+function legacyCopyTable(html) {
+  const holder = document.createElement('div');
+  holder.contentEditable = 'true';
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;opacity:0;pointer-events:none;';
+  holder.innerHTML = html;
+  document.body.appendChild(holder);
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(holder);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  const copied = document.execCommand && document.execCommand('copy');
+  selection.removeAllRanges();
+  holder.remove();
+  return copied;
+}
+
+const copyTableBtn = document.getElementById('copyTableBtn');
+copyTableBtn.addEventListener('click', async function () {
+  const original = copyTableBtn.textContent;
+  const payload = buildOutlookTable();
+  try {
+    if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([payload.html], { type: 'text/html' }),
+        'text/plain': new Blob([payload.text], { type: 'text/plain' })
+      })]);
+    } else if (!legacyCopyTable(payload.html)) {
+      throw new Error('Clipboard unavailable');
+    }
+    copyTableBtn.textContent = 'Table Copied!';
+  } catch (e) {
+    copyTableBtn.textContent = 'Copy failed';
+  }
+  resetCopyBtn(copyTableBtn, original);
 });
 
 // Add Competitor button
@@ -2127,6 +2218,7 @@ function updateSummaryTable(showBasicInfo) {
 function updateRemarksColumnVisibility(showRemarks) {
   mainDataTable.classList.toggle('hide-remarks', !showRemarks);
   summaryTable.classList.toggle('hide-remarks', !showRemarks);
+  requestAnimationFrame(positionRowControls);
 }
 
 const extraColsToggle = document.getElementById('extraColsToggle');
@@ -2148,6 +2240,7 @@ extraColsToggle.addEventListener('change', (e) => {
     mainDataTable.classList.add('extra-cols-hidden');
   }
   updateMethodBHeader(e.target.checked);
+  requestAnimationFrame(positionRowControls);
 });
 
 basicInfoToggle.addEventListener('change', (e) => {

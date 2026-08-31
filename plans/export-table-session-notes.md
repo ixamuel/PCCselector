@@ -14,6 +14,8 @@ The original export table's columns, headers, values, cell styling, and manual O
   - The remove control sits in a dedicated right-side rail, outside the table and its Remarks column.
 - Preserved competitor-cell and Remarks edits in the row model when export rows are reordered or redrawn.
 - Kept the summary aligned with the main export table after the added control rails.
+- Added touch-sized drag and remove controls for small screens and coarse pointers.
+- Added `Copy Table for Outlook`, which copies the visible comparison table as clean HTML plus a plain-text fallback. Control rails are excluded from the copied table.
 
 ## Explicitly Excluded
 
