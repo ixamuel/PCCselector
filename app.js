@@ -2037,7 +2037,11 @@ function renderMainTable() {
     } else {
       cellsHtml = row.values.map(function (v, i) {
         var ph = i === 0 ? 'Enter competitor PN' : '';
-        return '<td class="competitor-cell' + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="true" data-ph="' + ph + '">' + v + '</td>';
+        // Datasheets arrive as an anchor from the selected Panasonic row. Keep
+        // that cell out of the contenteditable surface so browsers follow the
+        // link on click instead of only placing an edit caret in the cell.
+        var isDatasheet = exportColumns[i] && exportColumns[i].key === 'Feature';
+        return '<td class="competitor-cell' + (isDatasheet ? ' datasheet-cell' : '') + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="' + (!isDatasheet) + '" data-ph="' + ph + '">' + v + '</td>';
       }).join('');
       cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '">' + (row.remarks || '') + '</td>';
       return '<tr class="competitor-row" data-type="competitor" data-id="' + row.id + '">' + cellsHtml + '</tr>';
