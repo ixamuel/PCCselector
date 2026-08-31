@@ -1576,7 +1576,7 @@ function openExportTable() {
     }
     return `${col.label}${sub ? " [" + sub + "]" : ""}`;
   });
-  const bodyRows = rows.map((row) =>
+  const buildExportCells = (row) =>
     exportColumns.map((col) => {
       if (col.type === "pn") return row["Part Number"] || "";
       if (col.type === "number") {
@@ -1602,8 +1602,8 @@ function openExportTable() {
         return text;
       }
       return displayCategoryValue(row[col.key]);
-    })
-  );
+    });
+  const bodyRows = rows.map(buildExportCells);
   // Generate summary data for each selected row - two versions
   const summaryRowsBasicHidden = rows.map((row) => ({
     pn: row["Part Number"] || "",
@@ -1629,6 +1629,13 @@ th{background:#f0f2f4}
 .summary-table { margin-top: 32px; }
 .summary-table th { background: #e8f0fb; }
 .summary-header { margin-top: 40px; margin-bottom: 12px; font-size: 16px; font-weight: 600; color: #0058a3; }
+/* Window controls are deliberately styled independently from the tables below.
+   The export tables retain their original presentation for Outlook copying. */
+.export-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.export-toolbar button { margin-bottom: 0; }
+.export-toolbar .toolbar-separator { width: 1px; height: 24px; background: #d7dce2; margin: 0 2px; }
+.export-toolbar .toolbar-hint { color: #69727d; font-size: 12px; margin-left: 2px; }
+.summary-section { margin: 0 36px 0 30px; }
 /* Toggle switch styles */
 .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .toggle-label { font-size: 14px; color: #555; }
@@ -1706,59 +1713,96 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   color: #999;
   font-style: italic;
 }
-/* Row drag grip overlay (outside the table, so not copied).
-   The wrapper gets left padding to create a gutter so the grip sits to the
-   LEFT of the table and never overlaps the Part No. cell text. */
+/* The control rail is a sibling of the table content.  It never participates
+   in a table selection, so manual copy/paste to Outlook remains clean. */
 #mainTableWrap {
   position: relative;
-  padding-left: 30px;
+  padding: 0 36px 0 30px;
 }
-/* Keep the summary table aligned with the main table (which is shifted
-   right by the wrapper's left gutter for the drag grips). */
 .summary-table {
-  margin-left: 30px;
+  margin-left: 0;
+}
+.row-control-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  pointer-events: none;
+  z-index: 5;
+}
+.row-remove-rail {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: auto;
+  z-index: 5;
 }
 .row-grip {
   position: absolute;
-  left: 8px;
-  width: 3px;
-  height: 26px;
-  margin-top: -13px;
-  border-radius: 2px;
+  left: 3px;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
   cursor: grab;
-  z-index: 5;
-  background: linear-gradient(to bottom, rgba(0, 88, 163, 0), rgba(0, 88, 163, 0.35), rgba(0, 88, 163, 0));
-  transition: background 0.18s ease, box-shadow 0.18s ease, width 0.18s ease;
+  pointer-events: auto;
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.row-grip::before {
+  content: "";
+  display: block;
+  width: 11px;
+  height: 11px;
+  margin: auto;
+  opacity: 0.6;
+  background: repeating-linear-gradient(to bottom, #5d7185 0 1px, transparent 1px 4px);
 }
 .row-grip:hover {
-  background: linear-gradient(to bottom, rgba(0, 88, 163, 0.1), #0058a3, rgba(0, 88, 163, 0.1));
-  box-shadow: 0 0 8px rgba(0, 88, 163, 0.5);
-  cursor: grab;
+  background: #edf5fc;
+  border-color: #b9d5ed;
+  box-shadow: 0 1px 3px rgba(0, 88, 163, 0.12);
 }
 .row-grip:active { cursor: grabbing; }
 .row-grip.dragging {
-  background: linear-gradient(to bottom, rgba(0, 88, 163, 0.15), #0058a3, rgba(0, 88, 163, 0.15));
-  box-shadow: 0 0 14px rgba(0, 88, 163, 0.7);
-  width: 4px;
+  background: #dceefa;
+  border-color: #8dc0e5;
+  box-shadow: 0 2px 8px rgba(0, 88, 163, 0.2);
 }
-/* Row being dragged */
-#mainTableBody tr.dragging { opacity: 0.45; outline: 2px dashed #0058a3; }
-/* Remove button floating overlay (outside the table, so not copied) */
+#mainTableBody tr.dragging { opacity: 0.48; }
+.drop-indicator {
+  position: absolute;
+  left: 30px;
+  right: 36px;
+  height: 2px;
+  display: none;
+  background: #0058a3;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.92), 0 1px 4px rgba(0,88,163,0.35);
+  pointer-events: none;
+  z-index: 6;
+}
+/* Per-row remove action in the external rail (never over Remarks or copied). */
 .remove-competitor-btn {
   position: absolute;
-  right: 4px;
-  width: 26px;
-  height: 26px;
-  margin-top: -13px;
+  left: 5px;
+  width: 24px;
+  height: 28px;
+  margin: 0;
   padding: 0;
   min-width: 0;
-  border: none;
-  border-radius: 50%;
+  border: 1px solid transparent;
+  border-radius: 7px;
   color: #a33;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -1768,15 +1812,18 @@ td.competitor-cell[contenteditable="true"]:empty:before {
 }
 .remove-competitor-btn:hover {
   background: #fde8e8;
+  border-color: #efb6b6;
   color: #8b0000;
   box-shadow: 0 2px 8px rgba(163, 51, 51, 0.3);
 }
 </style>
 </head><body>
-<div style="margin-bottom:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+<div class="export-toolbar">
 <button id="copyPnsBtn">Copy PNs</button>
 <button id="addCompetitorBtn">Add Competitor</button>
 <button id="clearCompetitorsBtn">Clear Competitors</button>
+<span class="toolbar-separator" aria-hidden="true"></span>
+<span class="toolbar-hint">Use the handle beside a row to reorder it.</span>
 </div>
 <div class="toggle-container">
   <span class="toggle-label">Show Tol %, I (⊿T=40C) Method A A, Isat ΔL -20% A, DCR Max mΩ</span>
@@ -1792,7 +1839,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
     <span class="toggle-slider"></span>
   </label>
 </div>
-<div id="mainTableWrap"><table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
+<div id="mainTableWrap"><div id="rowControlRail" class="row-control-rail" aria-label="Row order controls"></div><div id="rowRemoveRail" class="row-remove-rail" aria-label="Row removal controls"></div><div id="dropIndicator" class="drop-indicator" aria-hidden="true"></div><table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
   const extraCols = new Set([2, 4, 6, 8]);
   const extraCls = extraCols.has(i) ? 'extra-col' : '';
   // Method B column is at index 3; render with toggleable sub text inline
@@ -1803,6 +1850,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
 }).join("")}<th class="remarks-column">Remarks</th></tr></thead>
 <tbody id="mainTableBody"></tbody></table></div>
 
+<div class="summary-section">
 <div class="summary-header">Part Number Summary</div>
 <div class="toggle-container">
   <span class="toggle-label">Show PCC, SMD, Tol., Automotive</span>
@@ -1816,6 +1864,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
 <tbody id="summaryTableBody">${summaryRowsBasicHidden
       .map((r) => `<tr><td>${r.pn}</td><td class="desc-cell">${r.desc}</td><td class="remarks-column" contenteditable="true" data-pn="${r.pn}">${r.remarks}</td></tr>`)
       .join("")}</tbody></table>
+</div>
 
 <script>
 const exportColumns = ${JSON.stringify(exportColumns)};
@@ -1823,8 +1872,8 @@ const panasonicBodyRows = ${JSON.stringify(bodyRows)};
 const extraColSet = new Set([2, 4, 6, 8]);
 
 // Build the ordered row model. Panasonic rows keep their precomputed HTML cells.
-const panasonicRows = panasonicBodyRows.map(function (cells) {
-  return { type: 'panasonic', pn: cells[0] || '', cells: cells };
+const panasonicRows = panasonicBodyRows.map(function (cells, index) {
+  return { id: 'panasonic-' + index, type: 'panasonic', pn: cells[0] || '', cells: cells, remarks: '' };
 });
 let competitorRows = [];
 let competitorIdCounter = 0;
@@ -1832,6 +1881,9 @@ let mainRows = panasonicRows.slice();
 
 const mainTableBody = document.getElementById('mainTableBody');
 const mainTableWrap = document.getElementById('mainTableWrap');
+const rowControlRail = document.getElementById('rowControlRail');
+const rowRemoveRail = document.getElementById('rowRemoveRail');
+const dropIndicator = document.getElementById('dropIndicator');
 
 function renderMainTable() {
   mainTableBody.innerHTML = mainRows.map(function (row) {
@@ -1840,19 +1892,40 @@ function renderMainTable() {
       cellsHtml = row.cells.map(function (c, i) {
         return '<td' + (extraColSet.has(i) ? ' class="extra-col"' : '') + '>' + c + '</td>';
       }).join('');
-      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.pn + '"></td>';
-      return '<tr data-type="panasonic" data-id="' + row.pn + '">' + cellsHtml + '</tr>';
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.pn + '">' + (row.remarks || '') + '</td>';
+      return '<tr data-type="panasonic" data-id="' + row.id + '">' + cellsHtml + '</tr>';
     } else {
       cellsHtml = row.values.map(function (v, i) {
         var ph = i === 0 ? 'Enter competitor PN' : '';
         return '<td class="competitor-cell' + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="true" data-ph="' + ph + '">' + v + '</td>';
       }).join('');
-      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '"></td>';
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '">' + (row.remarks || '') + '</td>';
       return '<tr class="competitor-row" data-type="competitor" data-id="' + row.id + '">' + cellsHtml + '</tr>';
     }
   }).join('');
   positionRowControls();
 }
+
+// Keep edits in the row model immediately.  This prevents typed competitor
+// PNs and remarks from being lost when a row is reordered or another row is
+// added, while leaving ordinary table selection untouched.
+mainTableBody.addEventListener('input', function (e) {
+  var cell = e.target.closest('td[contenteditable="true"]');
+  if (!cell) return;
+  var tr = cell.closest('tr');
+  if (!tr) return;
+  var row = mainRows.find(function (item) { return item.id === tr.dataset.id; });
+  if (!row) return;
+  if (cell.classList.contains('remarks-column')) {
+    row.remarks = cell.textContent;
+    return;
+  }
+  if (row.type === 'competitor') {
+    var cells = Array.from(tr.querySelectorAll('td.competitor-cell'));
+    var index = cells.indexOf(cell);
+    if (index !== -1) row.values[index] = cell.textContent;
+  }
+});
 
 function getPnsList() {
   return mainRows.map(function (row) {
@@ -1878,7 +1951,7 @@ copyPnsBtn.addEventListener('click', async function () {
 const addCompetitorBtn = document.getElementById('addCompetitorBtn');
 addCompetitorBtn.addEventListener('click', function () {
   const id = 'comp-' + (++competitorIdCounter);
-  const comp = { type: 'competitor', id: id, values: exportColumns.map(function () { return ''; }) };
+  const comp = { type: 'competitor', id: id, values: exportColumns.map(function () { return ''; }), remarks: '' };
   competitorRows.push(comp);
   // First competitor row goes to the top; subsequent rows go to the bottom
   if (competitorRows.length === 1) {
@@ -1898,114 +1971,124 @@ clearCompetitorsBtn.addEventListener('click', function () {
   renderMainTable();
 });
 
-// Remove competitor button (event delegation on the wrapper, since the
-// button is a floating overlay outside the table)
-mainTableWrap.addEventListener('click', function (e) {
+// A direct listener on the dedicated right rail keeps removal reliable while
+// leaving the copied table and its Remarks column untouched.
+rowRemoveRail.addEventListener('click', function (e) {
   const btn = e.target.closest('.remove-competitor-btn');
   if (!btn) return;
   const id = btn.dataset.id;
   competitorRows = competitorRows.filter(function (r) { return r.id !== id; });
   mainRows = mainRows.filter(function (r) { return r.id !== id; });
   renderMainTable();
+  updateSummaryTable(basicInfoToggle.checked);
 });
 
-// Position the grip and remove overlays over each row. The overlays live
-// OUTSIDE the <table> element (inside the positioned wrapper), so they are
-// never included in a manual copy/paste to Outlook.
+// Position controls outside the table.  The dedicated rail is intentionally
+// not a table column, so it cannot be selected or pasted into Outlook.
 function positionRowControls() {
-  // Remove any existing overlays
-  mainTableWrap.querySelectorAll('.row-grip, .remove-competitor-btn').forEach(function (el) {
-    el.remove();
-  });
+  rowControlRail.innerHTML = '';
+  rowRemoveRail.innerHTML = '';
   var rows = mainTableBody.querySelectorAll('tr');
   rows.forEach(function (tr) {
     var top = tr.offsetTop;
     var height = tr.offsetHeight;
-    // Grip overlay for every row (drag handle) - a vertical glow accent bar
-    var grip = document.createElement('div');
+    var grip = document.createElement('button');
+    grip.type = 'button';
     grip.className = 'row-grip';
-    grip.draggable = true;
     grip.dataset.id = tr.dataset.id;
     grip.title = 'Drag to reorder';
-    grip.style.top = (top + height / 2) + 'px';
-    mainTableWrap.appendChild(grip);
-    // Remove overlay for competitor rows only
-    if (tr.dataset.type === 'competitor') {
-      var btn = document.createElement('button');
-      btn.className = 'remove-competitor-btn';
-      btn.dataset.id = tr.dataset.id;
-      btn.title = 'Remove competitor';
+    grip.setAttribute('aria-label', 'Reorder row ' + (Array.from(rows).indexOf(tr) + 1));
+    grip.style.top = (top + Math.max(0, (height - 28) / 2)) + 'px';
+    rowControlRail.appendChild(grip);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'remove-competitor-btn';
+    btn.dataset.id = tr.dataset.id;
+    btn.title = 'Remove this row from the export';
+    btn.setAttribute('aria-label', 'Remove row ' + (Array.from(rows).indexOf(tr) + 1) + ' from the export');
       btn.textContent = '\u00d7';
-      btn.style.top = (top + height / 2) + 'px';
-      mainTableWrap.appendChild(btn);
-    }
+    btn.style.top = (top + Math.max(0, (height - 28) / 2)) + 'px';
+    rowRemoveRail.appendChild(btn);
   });
 }
 
-// Drag-and-drop row reordering (initiated only from the grip overlay)
-let dragRow = null;
-let dragGrip = null;
-mainTableWrap.addEventListener('dragstart', function (e) {
+// Pointer-based sorting is used instead of native HTML drag/drop.  Native
+// dragging interferes with text selection; this only begins on the external
+// handle and waits for a small movement threshold before changing state.
+let activeDrag = null;
+
+function clearActiveDrag() {
+  if (!activeDrag) return;
+  activeDrag.row.classList.remove('dragging');
+  activeDrag.handle.classList.remove('dragging');
+  dropIndicator.style.display = 'none';
+  activeDrag = null;
+}
+
+function getDropTarget(clientY, sourceRow) {
+  const candidates = Array.from(mainTableBody.querySelectorAll('tr')).filter(function (tr) {
+    return tr !== sourceRow;
+  });
+  for (const tr of candidates) {
+    const rect = tr.getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) return { tr: tr, before: true };
+  }
+  const last = candidates[candidates.length - 1];
+  return last ? { tr: last, before: false } : null;
+}
+
+function showDropIndicator(target) {
+  if (!target) {
+    dropIndicator.style.display = 'none';
+    return;
+  }
+  const wrapRect = mainTableWrap.getBoundingClientRect();
+  const rect = target.tr.getBoundingClientRect();
+  dropIndicator.style.top = ((target.before ? rect.top : rect.bottom) - wrapRect.top) + 'px';
+  dropIndicator.style.display = 'block';
+}
+
+rowControlRail.addEventListener('pointerdown', function (e) {
   const grip = e.target.closest('.row-grip');
   if (!grip) return;
   const tr = mainTableBody.querySelector('tr[data-id="' + grip.dataset.id + '"]');
   if (!tr) return;
-  dragRow = tr;
-  dragGrip = grip;
-  tr.classList.add('dragging');
-  grip.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', '');
-});
-mainTableWrap.addEventListener('dragover', function (e) {
-  if (!dragRow) return;
   e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  // Resolve the row under the pointer. The grip/remove overlays sit outside
-  // the table, so map them back to their row via data-id when necessary.
-  let tr = e.target.closest('tr');
-  if (!tr) {
-    const grip = e.target.closest('.row-grip, .remove-competitor-btn');
-    if (grip && grip.dataset.id) {
-      tr = mainTableBody.querySelector('tr[data-id="' + grip.dataset.id + '"]');
-    }
-  }
-  if (tr && tr !== dragRow) {
-    const rect = tr.getBoundingClientRect();
-    const after = (e.clientY - rect.top) > (rect.height / 2);
-    mainTableBody.insertBefore(dragRow, after ? tr.nextSibling : tr);
-  }
+  grip.setPointerCapture(e.pointerId);
+  activeDrag = { row: tr, handle: grip, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, started: false, target: null };
 });
-function syncMainRowsFromDom() {
-  const domRows = Array.from(mainTableBody.querySelectorAll('tr'));
-  const newMainRows = domRows.map(function (tr) {
-    const type = tr.dataset.type;
-    if (type === 'panasonic') {
-      return panasonicRows.find(function (r) { return r.pn === tr.dataset.id; });
-    }
-    const comp = competitorRows.find(function (r) { return r.id === tr.dataset.id; });
-    const cells = tr.querySelectorAll('td.competitor-cell');
-    comp.values = Array.from(cells).map(function (c) { return c.textContent.trim(); });
-    return comp;
-  });
-  mainRows = newMainRows;
-}
-mainTableWrap.addEventListener('drop', function (e) {
-  e.preventDefault();
-  if (dragRow) dragRow.classList.remove('dragging');
-  if (dragGrip) dragGrip.classList.remove('dragging');
-  dragRow = null;
-  dragGrip = null;
-  syncMainRowsFromDom();
-  positionRowControls();
+
+rowControlRail.addEventListener('pointermove', function (e) {
+  if (!activeDrag || e.pointerId !== activeDrag.pointerId) return;
+  if (!activeDrag.started) {
+    const distance = Math.hypot(e.clientX - activeDrag.startX, e.clientY - activeDrag.startY);
+    if (distance < 5) return;
+    activeDrag.started = true;
+    activeDrag.row.classList.add('dragging');
+    activeDrag.handle.classList.add('dragging');
+  }
+  activeDrag.target = getDropTarget(e.clientY, activeDrag.row);
+  showDropIndicator(activeDrag.target);
 });
-mainTableWrap.addEventListener('dragend', function (e) {
-  if (dragRow) dragRow.classList.remove('dragging');
-  if (dragGrip) dragGrip.classList.remove('dragging');
-  dragRow = null;
-  dragGrip = null;
-  syncMainRowsFromDom();
-  positionRowControls();
+
+rowControlRail.addEventListener('pointerup', function (e) {
+  if (!activeDrag || e.pointerId !== activeDrag.pointerId) return;
+  const drag = activeDrag;
+  if (drag.started && drag.target) {
+    const sourceIndex = mainRows.findIndex(function (row) { return row.id === drag.row.dataset.id; });
+    const moved = mainRows.splice(sourceIndex, 1)[0];
+    const targetIndex = mainRows.findIndex(function (row) { return row.id === drag.target.tr.dataset.id; });
+    mainRows.splice(drag.target.before ? targetIndex : targetIndex + 1, 0, moved);
+    clearActiveDrag();
+    renderMainTable();
+    return;
+  }
+  clearActiveDrag();
+});
+
+rowControlRail.addEventListener('pointercancel', clearActiveDrag);
+window.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') clearActiveDrag();
 });
 window.addEventListener('resize', positionRowControls);
 
