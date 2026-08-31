@@ -1602,8 +1602,15 @@ function openExportTable() {
         return text;
       }
       return displayCategoryValue(row[col.key]);
-    });
+  });
   const bodyRows = rows.map(buildExportCells);
+  const partNumberCatalog = data
+    .map((row) => ({ pn: String(row["Part Number"] || ""), cells: buildExportCells(row) }))
+    .filter((row) => row.pn)
+    .sort((a, b) => a.pn.localeCompare(b.pn));
+  // Escape angle brackets so an unusual data value cannot end the generated
+  // export-window script early.
+  const partNumberCatalogJson = JSON.stringify(partNumberCatalog).replace(/</g, "\\u003c");
   // Generate summary data for each selected row - two versions
   const summaryRowsBasicHidden = rows.map((row) => ({
     pn: row["Part Number"] || "",
@@ -1700,14 +1707,14 @@ td.remarks-column[contenteditable="true"]:empty:before {
 .extra-cols-hidden td.extra-col {
   display: none;
 }
-/* Competitor rows */
-tr.competitor-row td { background: #fffdf5; }
+/* Competitor rows keep the original table borders while using a subtle tint. */
+tr.competitor-row td { background: #fffdf5; border-color: #ddd; }
 td.competitor-cell[contenteditable="true"] {
   padding: 6px 8px;
   min-height: 32px;
   cursor: text;
   background: #fff;
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 13px;
   box-sizing: border-box;
@@ -1826,6 +1833,49 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   color: #8b0000;
   box-shadow: 0 2px 8px rgba(163, 51, 51, 0.3);
 }
+.part-suggestion-menu {
+  position: fixed;
+  display: none;
+  max-height: 240px;
+  overflow-y: auto;
+  min-width: 220px;
+  padding: 6px;
+  background: linear-gradient(180deg, #ffffff, #f8fbfe);
+  border: 1px solid #c7dcec;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(23, 57, 82, 0.2), 0 2px 6px rgba(23, 57, 82, 0.08);
+  z-index: 30;
+}
+.part-suggestion-title {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  margin: -6px -6px 0;
+  padding: 11px 13px 6px;
+  background: #ffffff;
+  color: #69727d;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.part-suggestion-option {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #243342;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.part-suggestion-option:hover,
+.part-suggestion-option.is-active { background: #e8f3fc; color: #0058a3; }
 @media (max-width: 700px), (pointer: coarse) {
   body { padding: 14px; }
   .export-toolbar { gap: 6px; }
@@ -1838,6 +1888,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   .row-grip { left: 3px; width: 36px; height: 40px; touch-action: none; }
   .remove-competitor-btn { left: 3px; width: 36px; height: 40px; font-size: 21px; }
   .drop-indicator { left: 42px; right: 42px; }
+  .part-suggestion-menu { max-height: 200px; }
 }
 </style>
 </head><body>
@@ -1873,6 +1924,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
   return `<th${extraCls ? ' class="' + extraCls + '"' : ''}>${h}</th>`;
 }).join("")}<th class="remarks-column">Remarks</th></tr></thead>
 <tbody id="mainTableBody"></tbody></table></div>
+<div id="partSuggestionMenu" class="part-suggestion-menu" role="listbox" aria-label="Panasonic part-number suggestions"></div>
 
 <div class="summary-section">
 <div class="summary-header">Part Number Summary</div>
@@ -1893,6 +1945,7 @@ td.competitor-cell[contenteditable="true"]:empty:before {
 <script>
 const exportColumns = ${JSON.stringify(exportColumns)};
 const panasonicBodyRows = ${JSON.stringify(bodyRows)};
+const partNumberCatalog = ${partNumberCatalogJson};
 const extraColSet = new Set([2, 4, 6, 8]);
 
 // Build the ordered row model. Panasonic rows keep their precomputed HTML cells.
@@ -1908,6 +1961,69 @@ const mainTableWrap = document.getElementById('mainTableWrap');
 const rowControlRail = document.getElementById('rowControlRail');
 const rowRemoveRail = document.getElementById('rowRemoveRail');
 const dropIndicator = document.getElementById('dropIndicator');
+const partSuggestionMenu = document.getElementById('partSuggestionMenu');
+let suggestionState = null;
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, function (character) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character];
+  });
+}
+
+function hidePartSuggestions() {
+  suggestionState = null;
+  partSuggestionMenu.innerHTML = '';
+  partSuggestionMenu.style.display = 'none';
+}
+
+function findPartMatches(query) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return partNumberCatalog.slice(0, 8);
+  const startsWith = partNumberCatalog.filter(function (part) {
+    return part.pn.toLowerCase().startsWith(normalized);
+  });
+  const contains = partNumberCatalog.filter(function (part) {
+    const pn = part.pn.toLowerCase();
+    return !pn.startsWith(normalized) && pn.includes(normalized);
+  });
+  return startsWith.concat(contains).slice(0, 8);
+}
+
+function renderPartSuggestions() {
+  if (!suggestionState) return;
+  partSuggestionMenu.innerHTML = '<div class="part-suggestion-title">Panasonic part numbers</div>' + suggestionState.matches.map(function (part, index) {
+    return '<button type="button" class="part-suggestion-option' + (index === suggestionState.index ? ' is-active' : '') + '" role="option" aria-selected="' + (index === suggestionState.index) + '" data-index="' + index + '">' + escapeHtml(part.pn) + '</button>';
+  }).join('');
+}
+
+function positionPartSuggestions() {
+  if (!suggestionState || !suggestionState.cell || !suggestionState.cell.isConnected) return;
+  const rect = suggestionState.cell.getBoundingClientRect();
+  partSuggestionMenu.style.left = Math.max(8, rect.left) + 'px';
+  partSuggestionMenu.style.top = (rect.bottom + 4) + 'px';
+  partSuggestionMenu.style.width = Math.max(220, rect.width) + 'px';
+  partSuggestionMenu.style.maxHeight = Math.max(80, Math.min(240, window.innerHeight - rect.bottom - 12)) + 'px';
+}
+
+function showPartSuggestions(cell, row) {
+  const matches = findPartMatches(cell.textContent);
+  if (!matches.length) {
+    hidePartSuggestions();
+    return;
+  }
+  suggestionState = { rowId: row.id, cell: cell, matches: matches, index: 0 };
+  positionPartSuggestions();
+  partSuggestionMenu.style.display = 'block';
+  renderPartSuggestions();
+}
+
+function selectSuggestedPart(rowId, part) {
+  const row = mainRows.find(function (item) { return item.id === rowId; });
+  if (!row || row.type !== 'competitor') return;
+  row.values = part.cells.slice();
+  hidePartSuggestions();
+  renderMainTable();
+}
 
 function renderMainTable() {
   mainTableBody.innerHTML = mainRows.map(function (row) {
@@ -1947,9 +2063,58 @@ mainTableBody.addEventListener('input', function (e) {
   if (row.type === 'competitor') {
     var cells = Array.from(tr.querySelectorAll('td.competitor-cell'));
     var index = cells.indexOf(cell);
-    if (index !== -1) row.values[index] = cell.textContent;
+    if (index !== -1) {
+      row.values[index] = cell.textContent;
+      if (index === 0) showPartSuggestions(cell, row);
+    }
   }
 });
+
+mainTableBody.addEventListener('focusin', function (e) {
+  const cell = e.target.closest('td.competitor-cell[contenteditable="true"]');
+  if (!cell) return;
+  const tr = cell.closest('tr');
+  const row = tr && mainRows.find(function (item) { return item.id === tr.dataset.id; });
+  const cells = tr ? Array.from(tr.querySelectorAll('td.competitor-cell')) : [];
+  if (row && row.type === 'competitor' && cells.indexOf(cell) === 0) showPartSuggestions(cell, row);
+});
+
+mainTableBody.addEventListener('keydown', function (e) {
+  if (!suggestionState) return;
+  const cell = e.target.closest('td.competitor-cell[contenteditable="true"]');
+  const tr = cell && cell.closest('tr');
+  if (!cell || !tr || tr.dataset.id !== suggestionState.rowId) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const delta = e.key === 'ArrowDown' ? 1 : -1;
+    suggestionState.index = (suggestionState.index + delta + suggestionState.matches.length) % suggestionState.matches.length;
+    renderPartSuggestions();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    selectSuggestedPart(suggestionState.rowId, suggestionState.matches[suggestionState.index]);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    hidePartSuggestions();
+  }
+});
+
+mainTableBody.addEventListener('focusout', function () {
+  window.setTimeout(hidePartSuggestions, 150);
+});
+
+partSuggestionMenu.addEventListener('mousedown', function (e) {
+  e.preventDefault();
+  const option = e.target.closest('.part-suggestion-option');
+  if (!option || !suggestionState) return;
+  const part = suggestionState.matches[Number(option.dataset.index)];
+  if (part) selectSuggestedPart(suggestionState.rowId, part);
+});
+
+// The export window can scroll after several competitor rows are added.  Keep
+// the fixed suggestion surface attached to its live cell in every scrollable
+// ancestor, not only the first cell that originally opened it.
+window.addEventListener('scroll', positionPartSuggestions, true);
+window.addEventListener('resize', positionPartSuggestions);
 
 function getPnsList() {
   return mainRows.map(function (row) {
