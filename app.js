@@ -66,7 +66,7 @@ const filterGroups = [
 const resultColumns = [
   { key: "__select__", label: "", sub: "", type: "select", sortable: false },
   { key: "Part Number", label: "PN", sub: "", type: "pn" },
-  { key: "Lo (uH)", label: "L", sub: "uH", type: "number" },
+  { key: "Lo (uH)", label: "L", sub: "µH", type: "number" },
   { key: "Lo Tol. (%)", label: "Tol", sub: "%", type: "number" },
   {
     key: "Method B (A typ at 40℃)",
@@ -1519,7 +1519,7 @@ function formatSummaryDesc(row, options = {}) {
   // DCR only (R: 1.1mΩ)
   if (row["DCR Typ (mOhm)"]) {
     const dcr = formatNumber(row["DCR Typ (mOhm)"]);
-    parts.push(`R: ${dcr}mΩ`);
+    parts.push(`DCR: ${dcr}mΩ`);
   }
 
   // Dimensions (10.9 x 10 x 5mm) - before temperature
@@ -1560,7 +1560,21 @@ function openExportTable() {
   );
   const header = exportColumns.map((col) => {
     if (col.key === "Automotive Grade") return "AECQ-200";
-    return `${col.label}${col.sub ? " " + col.sub : ""}`;
+    if (col.key === "Feature") return "Datasheet";
+    const sub = col.sub || "";
+    // DCR columns: sub is "Typ mΩ" / "Max mΩ" - bracket only the unit
+    if (col.key === "DCR Typ (mOhm)" || col.key === "DCR Max (mOhm)") {
+      const parts = sub.split(" ");
+      const unit = parts.pop();
+      return `${col.label} ${parts.join(" ")} [${unit}]`;
+    }
+    // Method A column: sub is "Method A A" - keep descriptor outside, bracket only the unit
+    if (col.key === "Method A (A typ at 40℃)") {
+      const parts = sub.split(" ");
+      const unit = parts.pop();
+      return `${col.label} ${parts.join(" ")} [${unit}]`;
+    }
+    return `${col.label}${sub ? " [" + sub + "]" : ""}`;
   });
   const bodyRows = rows.map((row) =>
     exportColumns.map((col) => {
@@ -1580,6 +1594,12 @@ function openExportTable() {
         const H = row["Max Height (mm)"] ? String(row["Max Height (mm)"]) : "";
         if (L && W && H) return `${L} x ${W} x ${H}`;
         return formatSizeValue(row[col.key]);
+      }
+      if (col.key === "Feature") {
+        const url = row.URL;
+        const text = displayCategoryValue(row[col.key]);
+        if (url) return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+        return text;
       }
       return displayCategoryValue(row[col.key]);
     })
@@ -1653,14 +1673,111 @@ td.remarks-column[contenteditable="true"]:empty:before {
 .summary-table.hide-remarks td.remarks-column {
   display: none;
 }
+#mainDataTable.hide-remarks .remarks-column,
+#mainDataTable.hide-remarks th.remarks-column,
+#mainDataTable.hide-remarks td.remarks-column {
+  display: none;
+}
 /* Extra columns toggle */
 .extra-cols-hidden th.extra-col,
 .extra-cols-hidden td.extra-col {
   display: none;
 }
+/* Competitor rows */
+tr.competitor-row td { background: #fffdf5; }
+td.competitor-cell[contenteditable="true"] {
+  padding: 6px 8px;
+  min-height: 32px;
+  cursor: text;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+td.competitor-cell[contenteditable="true"]:focus {
+  outline: none;
+  border-color: #0058a3;
+  box-shadow: 0 0 0 2px rgba(0, 88, 163, 0.1);
+  background: #f8fbff;
+}
+td.competitor-cell[contenteditable="true"]:empty:before {
+  content: attr(data-ph);
+  color: #999;
+  font-style: italic;
+}
+/* Row drag grip overlay (outside the table, so not copied).
+   The wrapper gets left padding to create a gutter so the grip sits to the
+   LEFT of the table and never overlaps the Part No. cell text. */
+#mainTableWrap {
+  position: relative;
+  padding-left: 30px;
+}
+/* Keep the summary table aligned with the main table (which is shifted
+   right by the wrapper's left gutter for the drag grips). */
+.summary-table {
+  margin-left: 30px;
+}
+.row-grip {
+  position: absolute;
+  left: 8px;
+  width: 3px;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 2px;
+  cursor: grab;
+  z-index: 5;
+  background: linear-gradient(to bottom, rgba(0, 88, 163, 0), rgba(0, 88, 163, 0.35), rgba(0, 88, 163, 0));
+  transition: background 0.18s ease, box-shadow 0.18s ease, width 0.18s ease;
+}
+.row-grip:hover {
+  background: linear-gradient(to bottom, rgba(0, 88, 163, 0.1), #0058a3, rgba(0, 88, 163, 0.1));
+  box-shadow: 0 0 8px rgba(0, 88, 163, 0.5);
+  cursor: grab;
+}
+.row-grip:active { cursor: grabbing; }
+.row-grip.dragging {
+  background: linear-gradient(to bottom, rgba(0, 88, 163, 0.15), #0058a3, rgba(0, 88, 163, 0.15));
+  box-shadow: 0 0 14px rgba(0, 88, 163, 0.7);
+  width: 4px;
+}
+/* Row being dragged */
+#mainTableBody tr.dragging { opacity: 0.45; outline: 2px dashed #0058a3; }
+/* Remove button floating overlay (outside the table, so not copied) */
+.remove-competitor-btn {
+  position: absolute;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  padding: 0;
+  min-width: 0;
+  border: none;
+  border-radius: 50%;
+  color: #a33;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.remove-competitor-btn:hover {
+  background: #fde8e8;
+  color: #8b0000;
+  box-shadow: 0 2px 8px rgba(163, 51, 51, 0.3);
+}
 </style>
 </head><body>
-<button id="copyPnsBtn" style="margin-bottom:12px">Copy PNs</button>
+<div style="margin-bottom:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+<button id="copyPnsBtn">Copy PNs</button>
+<button id="addCompetitorBtn">Add Competitor</button>
+<button id="clearCompetitorsBtn">Clear Competitors</button>
+</div>
 <div class="toggle-container">
   <span class="toggle-label">Show Tol %, I (⊿T=40C) Method A A, Isat ΔL -20% A, DCR Max mΩ</span>
   <label class="toggle-switch">
@@ -1668,34 +1785,29 @@ td.remarks-column[contenteditable="true"]:empty:before {
     <span class="toggle-slider"></span>
   </label>
 </div>
-<table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
+<div class="toggle-container">
+  <span class="toggle-label">Remarks Column</span>
+  <label class="toggle-switch">
+    <input type="checkbox" class="toggle-checkbox" id="remarksToggle">
+    <span class="toggle-slider"></span>
+  </label>
+</div>
+<div id="mainTableWrap"><table id="mainDataTable" class="extra-cols-hidden"><thead><tr>${header.map((h, i) => {
   const extraCols = new Set([2, 4, 6, 8]);
   const extraCls = extraCols.has(i) ? 'extra-col' : '';
   // Method B column is at index 3; render with toggleable sub text inline
   if (i === 3) {
-    return `<th class="${extraCls} method-b-header">I (⊿T=40C) <span class="method-b-sub">Method B A</span></th>`;
+    return `<th class="${extraCls} method-b-header">I (⊿T=40C) <span class="method-b-sub">Method B [A]</span></th>`;
   }
   return `<th${extraCls ? ' class="' + extraCls + '"' : ''}>${h}</th>`;
-}).join("")}</tr></thead>
-<tbody>${bodyRows
-      .map((r) => `<tr>${r.map((c, i) => {
-        const extraCols = new Set([2, 4, 6, 8]);
-        return `<td${extraCols.has(i) ? ' class="extra-col"' : ''}>${c}</td>`;
-      }).join("")}</tr>`)
-      .join("")}</tbody></table>
+}).join("")}<th class="remarks-column">Remarks</th></tr></thead>
+<tbody id="mainTableBody"></tbody></table></div>
 
 <div class="summary-header">Part Number Summary</div>
 <div class="toggle-container">
   <span class="toggle-label">Show PCC, SMD, Tol., Automotive</span>
   <label class="toggle-switch">
     <input type="checkbox" class="toggle-checkbox" id="basicInfoToggle">
-    <span class="toggle-slider"></span>
-  </label>
-</div>
-<div class="toggle-container">
-  <span class="toggle-label">Show Remarks Column</span>
-  <label class="toggle-switch">
-    <input type="checkbox" class="toggle-checkbox" id="remarksToggle">
     <span class="toggle-slider"></span>
   </label>
 </div>
@@ -1706,19 +1818,199 @@ td.remarks-column[contenteditable="true"]:empty:before {
       .join("")}</tbody></table>
 
 <script>
-const pnsList = ${JSON.stringify(rows.map(r => r["Part Number"] || "").filter(Boolean))};
+const exportColumns = ${JSON.stringify(exportColumns)};
+const panasonicBodyRows = ${JSON.stringify(bodyRows)};
+const extraColSet = new Set([2, 4, 6, 8]);
+
+// Build the ordered row model. Panasonic rows keep their precomputed HTML cells.
+const panasonicRows = panasonicBodyRows.map(function (cells) {
+  return { type: 'panasonic', pn: cells[0] || '', cells: cells };
+});
+let competitorRows = [];
+let competitorIdCounter = 0;
+let mainRows = panasonicRows.slice();
+
+const mainTableBody = document.getElementById('mainTableBody');
+const mainTableWrap = document.getElementById('mainTableWrap');
+
+function renderMainTable() {
+  mainTableBody.innerHTML = mainRows.map(function (row) {
+    var cellsHtml;
+    if (row.type === 'panasonic') {
+      cellsHtml = row.cells.map(function (c, i) {
+        return '<td' + (extraColSet.has(i) ? ' class="extra-col"' : '') + '>' + c + '</td>';
+      }).join('');
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.pn + '"></td>';
+      return '<tr data-type="panasonic" data-id="' + row.pn + '">' + cellsHtml + '</tr>';
+    } else {
+      cellsHtml = row.values.map(function (v, i) {
+        var ph = i === 0 ? 'Enter competitor PN' : '';
+        return '<td class="competitor-cell' + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="true" data-ph="' + ph + '">' + v + '</td>';
+      }).join('');
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '"></td>';
+      return '<tr class="competitor-row" data-type="competitor" data-id="' + row.id + '">' + cellsHtml + '</tr>';
+    }
+  }).join('');
+  positionRowControls();
+}
+
+function getPnsList() {
+  return mainRows.map(function (row) {
+    if (row.type === 'panasonic') return row.pn;
+    var v = (row.values[0] || '').trim();
+    return v === 'Enter competitor PN' ? '' : v;
+  }).filter(Boolean);
+}
 
 function resetCopyBtn(btn, originalText) {
-  setTimeout(() => { btn.textContent = originalText; }, 2000);
+  setTimeout(function () { btn.textContent = originalText; }, 2000);
 }
 
 const copyPnsBtn = document.getElementById('copyPnsBtn');
-copyPnsBtn.addEventListener('click', async () => {
+copyPnsBtn.addEventListener('click', async function () {
   const original = copyPnsBtn.textContent;
-  try { await navigator.clipboard.writeText(pnsList.join('\\n')); copyPnsBtn.textContent = 'Copied!'; }
+  try { await navigator.clipboard.writeText(getPnsList().join('\\n')); copyPnsBtn.textContent = 'Copied!'; }
   catch (e) { copyPnsBtn.textContent = 'Copy failed'; }
   resetCopyBtn(copyPnsBtn, original);
 });
+
+// Add Competitor button
+const addCompetitorBtn = document.getElementById('addCompetitorBtn');
+addCompetitorBtn.addEventListener('click', function () {
+  const id = 'comp-' + (++competitorIdCounter);
+  const comp = { type: 'competitor', id: id, values: exportColumns.map(function () { return ''; }) };
+  competitorRows.push(comp);
+  // First competitor row goes to the top; subsequent rows go to the bottom
+  if (competitorRows.length === 1) {
+    mainRows.unshift(comp);
+  } else {
+    mainRows.push(comp);
+  }
+  renderMainTable();
+});
+
+// Clear Competitors button
+const clearCompetitorsBtn = document.getElementById('clearCompetitorsBtn');
+clearCompetitorsBtn.addEventListener('click', function () {
+  if (competitorRows.length === 0) return;
+  competitorRows = [];
+  mainRows = mainRows.filter(function (r) { return r.type !== 'competitor'; });
+  renderMainTable();
+});
+
+// Remove competitor button (event delegation on the wrapper, since the
+// button is a floating overlay outside the table)
+mainTableWrap.addEventListener('click', function (e) {
+  const btn = e.target.closest('.remove-competitor-btn');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  competitorRows = competitorRows.filter(function (r) { return r.id !== id; });
+  mainRows = mainRows.filter(function (r) { return r.id !== id; });
+  renderMainTable();
+});
+
+// Position the grip and remove overlays over each row. The overlays live
+// OUTSIDE the <table> element (inside the positioned wrapper), so they are
+// never included in a manual copy/paste to Outlook.
+function positionRowControls() {
+  // Remove any existing overlays
+  mainTableWrap.querySelectorAll('.row-grip, .remove-competitor-btn').forEach(function (el) {
+    el.remove();
+  });
+  var rows = mainTableBody.querySelectorAll('tr');
+  rows.forEach(function (tr) {
+    var top = tr.offsetTop;
+    var height = tr.offsetHeight;
+    // Grip overlay for every row (drag handle) - a vertical glow accent bar
+    var grip = document.createElement('div');
+    grip.className = 'row-grip';
+    grip.draggable = true;
+    grip.dataset.id = tr.dataset.id;
+    grip.title = 'Drag to reorder';
+    grip.style.top = (top + height / 2) + 'px';
+    mainTableWrap.appendChild(grip);
+    // Remove overlay for competitor rows only
+    if (tr.dataset.type === 'competitor') {
+      var btn = document.createElement('button');
+      btn.className = 'remove-competitor-btn';
+      btn.dataset.id = tr.dataset.id;
+      btn.title = 'Remove competitor';
+      btn.textContent = '\u00d7';
+      btn.style.top = (top + height / 2) + 'px';
+      mainTableWrap.appendChild(btn);
+    }
+  });
+}
+
+// Drag-and-drop row reordering (initiated only from the grip overlay)
+let dragRow = null;
+let dragGrip = null;
+mainTableWrap.addEventListener('dragstart', function (e) {
+  const grip = e.target.closest('.row-grip');
+  if (!grip) return;
+  const tr = mainTableBody.querySelector('tr[data-id="' + grip.dataset.id + '"]');
+  if (!tr) return;
+  dragRow = tr;
+  dragGrip = grip;
+  tr.classList.add('dragging');
+  grip.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', '');
+});
+mainTableWrap.addEventListener('dragover', function (e) {
+  if (!dragRow) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // Resolve the row under the pointer. The grip/remove overlays sit outside
+  // the table, so map them back to their row via data-id when necessary.
+  let tr = e.target.closest('tr');
+  if (!tr) {
+    const grip = e.target.closest('.row-grip, .remove-competitor-btn');
+    if (grip && grip.dataset.id) {
+      tr = mainTableBody.querySelector('tr[data-id="' + grip.dataset.id + '"]');
+    }
+  }
+  if (tr && tr !== dragRow) {
+    const rect = tr.getBoundingClientRect();
+    const after = (e.clientY - rect.top) > (rect.height / 2);
+    mainTableBody.insertBefore(dragRow, after ? tr.nextSibling : tr);
+  }
+});
+function syncMainRowsFromDom() {
+  const domRows = Array.from(mainTableBody.querySelectorAll('tr'));
+  const newMainRows = domRows.map(function (tr) {
+    const type = tr.dataset.type;
+    if (type === 'panasonic') {
+      return panasonicRows.find(function (r) { return r.pn === tr.dataset.id; });
+    }
+    const comp = competitorRows.find(function (r) { return r.id === tr.dataset.id; });
+    const cells = tr.querySelectorAll('td.competitor-cell');
+    comp.values = Array.from(cells).map(function (c) { return c.textContent.trim(); });
+    return comp;
+  });
+  mainRows = newMainRows;
+}
+mainTableWrap.addEventListener('drop', function (e) {
+  e.preventDefault();
+  if (dragRow) dragRow.classList.remove('dragging');
+  if (dragGrip) dragGrip.classList.remove('dragging');
+  dragRow = null;
+  dragGrip = null;
+  syncMainRowsFromDom();
+  positionRowControls();
+});
+mainTableWrap.addEventListener('dragend', function (e) {
+  if (dragRow) dragRow.classList.remove('dragging');
+  if (dragGrip) dragGrip.classList.remove('dragging');
+  dragRow = null;
+  dragGrip = null;
+  syncMainRowsFromDom();
+  positionRowControls();
+});
+window.addEventListener('resize', positionRowControls);
+
+// Initial render
+renderMainTable();
 
 // Toggle functionality
 const basicInfoToggle = document.getElementById('basicInfoToggle');
@@ -1750,11 +2042,8 @@ function updateSummaryTable(showBasicInfo) {
 }
 
 function updateRemarksColumnVisibility(showRemarks) {
-  if (showRemarks) {
-    summaryTable.classList.remove('hide-remarks');
-  } else {
-    summaryTable.classList.add('hide-remarks');
-  }
+  mainDataTable.classList.toggle('hide-remarks', !showRemarks);
+  summaryTable.classList.toggle('hide-remarks', !showRemarks);
 }
 
 const extraColsToggle = document.getElementById('extraColsToggle');
@@ -1765,7 +2054,7 @@ function updateMethodBHeader(showExtra) {
   if (!subSpan) return;
   // When extra cols are hidden (toggle OFF), remove "Method B" from the sub text
   // When extra cols are shown (toggle ON), show full "Method B A" to distinguish from Method A
-  subSpan.textContent = showExtra ? 'Method B A' : 'A';
+  subSpan.textContent = showExtra ? 'Method B [A]' : '[A]';
 }
 
 extraColsToggle.addEventListener('change', (e) => {
