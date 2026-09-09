@@ -1973,7 +1973,7 @@ const partSuggestionMenu = document.getElementById('partSuggestionMenu');
 let suggestionState = null;
 
 function escapeHtml(value) {
-  return String(value || '').replace(/[&<>"']/g, function (character) {
+  return String(value ?? '').replace(/[&<>"']/g, function (character) {
     return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character];
   });
 }
@@ -2040,7 +2040,7 @@ function renderMainTable() {
       cellsHtml = row.cells.map(function (c, i) {
         return '<td' + (extraColSet.has(i) ? ' class="extra-col"' : '') + '>' + c + '</td>';
       }).join('');
-      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.pn + '">' + (row.remarks || '') + '</td>';
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.pn + '">' + escapeHtml(row.remarks) + '</td>';
       return '<tr data-type="panasonic" data-id="' + row.id + '">' + cellsHtml + '</tr>';
     } else {
       cellsHtml = row.values.map(function (v, i) {
@@ -2048,10 +2048,11 @@ function renderMainTable() {
         // Datasheets arrive as an anchor from the selected Panasonic row. Keep
         // that cell out of the contenteditable surface so browsers follow the
         // link on click instead of only placing an edit caret in the cell.
+        // All editable values are plain text and must be escaped on re-render.
         var isDatasheet = exportColumns[i] && exportColumns[i].key === 'Feature';
-        return '<td class="competitor-cell' + (isDatasheet ? ' datasheet-cell' : '') + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="' + (!isDatasheet) + '" data-ph="' + ph + '">' + v + '</td>';
+        return '<td class="competitor-cell' + (isDatasheet ? ' datasheet-cell' : '') + (extraColSet.has(i) ? ' extra-col' : '') + '" contenteditable="' + (!isDatasheet) + '" data-ph="' + ph + '">' + (isDatasheet ? v : escapeHtml(v)) + '</td>';
       }).join('');
-      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '">' + (row.remarks || '') + '</td>';
+      cellsHtml += '<td class="remarks-column" contenteditable="true" data-pn="' + row.id + '">' + escapeHtml(row.remarks) + '</td>';
       return '<tr class="competitor-row" data-type="competitor" data-id="' + row.id + '">' + cellsHtml + '</tr>';
     }
   }).join('');
@@ -2388,7 +2389,7 @@ function updateSummaryTable(showBasicInfo) {
   });
   
   summaryTableBody.innerHTML = rows.map(r =>
-    '<tr><td>' + r.pn + '</td><td class="desc-cell">' + r.desc + '</td><td class="remarks-column" contenteditable="true" data-pn="' + r.pn + '">' + (r.remarks || '') + '</td></tr>'
+    '<tr><td>' + r.pn + '</td><td class="desc-cell">' + r.desc + '</td><td class="remarks-column" contenteditable="true" data-pn="' + r.pn + '">' + escapeHtml(r.remarks) + '</td></tr>'
   ).join('');
 }
 
