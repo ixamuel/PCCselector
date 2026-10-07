@@ -916,7 +916,8 @@ tbody td {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
-  transition: opacity 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
+    border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
 
 .selection-tag:hover {
@@ -924,9 +925,13 @@ tbody td {
 }
 
 .selection-tag.dragging {
-  opacity: 0.45;
   cursor: grabbing;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  background: #dceefa;
+  border-color: #8dc0e5;
+  color: var(--accent);
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 1px rgba(0, 88, 163, 0.35), 0 6px 18px rgba(0, 88, 163, 0.28);
 }
 
 .selection-tag button {
