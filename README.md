@@ -54,9 +54,12 @@ Requirements & caveats:
   "unavailable here" message instead.
 - **Coverage:** Panasonic's tool does not list every series - many automotive
   inductors (e.g. `ETQP...`) report "Inventory is not found".
-- **Bot protection:** Panasonic sits behind Akamai, which blocks requests that
-  spoof a browser User-Agent from a non-browser client. The proxy therefore sends
-  a plain (non-browser) User-Agent.
+- **Bot protection:** Panasonic sits behind Akamai, which rejects requests that
+  carry **no** `User-Agent` (Vercel's `fetch` sends none by default) and also
+  blocks unknown agent names such as `node`/`undici`. Allow-listed identifiers
+  (curl, Wget, python-requests, axios) pass, so the proxy sends a plain
+  curl-style `User-Agent` on both upstream requests. Do **not** switch it to a
+  browser UA - Akamai blocks browser UAs whose TLS fingerprint does not match.
 - Please respect Panasonic's Terms of Use when using this feature.
 
 ## Recent Updates (v2.7)

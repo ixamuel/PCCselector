@@ -1654,7 +1654,15 @@ function runStockCheck() {
 
   fetch(stockApiUrl() + "?" + params.toString())
     .then((response) => {
-      if (!response.ok) throw new Error("HTTP " + response.status);
+      if (!response.ok) {
+        return response
+          .json()
+          .catch(() => null)
+          .then((body) => {
+            const detail = body && body.error ? body.error : "HTTP " + response.status;
+            throw new Error(detail + (body && body.code ? " [" + body.code + "]" : ""));
+          });
+      }
       return response.json();
     })
     .then((data) => renderStockCheck(data, pns))
@@ -2747,7 +2755,12 @@ function runStockCheck() {
 
   fetch(STOCK_API_URL + '?' + params.toString())
     .then(function (response) {
-      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!response.ok) {
+        return response.json().catch(function () { return null; }).then(function (body) {
+          var detail = body && body.error ? body.error : 'HTTP ' + response.status;
+          throw new Error(detail + (body && body.code ? ' [' + body.code + ']' : ''));
+        });
+      }
       return response.json();
     })
     .then(renderStockResults)

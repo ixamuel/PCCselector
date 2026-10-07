@@ -24,9 +24,20 @@ const ORIGIN = "https://industrial.panasonic.com";
 const SEARCH_PAGE = ORIGIN + "/ww/stock-search";
 const AJAX_URL = ORIGIN + "/ww/stock-search/ajax?_wrapper_format=drupal_ajax";
 
-const MAX_PARTS = 50;
-const CONCURRENCY = 4;
-const REQUEST_TIMEOUT_MS = 9000;
+const MAX_PARTS = 25;
+const CONCURRENCY = 5;
+const REQUEST_TIMEOUT_MS = 7000;
+
+// Panasonic sits behind Akamai, which rejects requests that arrive with no
+// User-Agent (Vercel's fetch/undici sends none by default) and also rejects
+// non-allow-listed agent names such as "node"/"undici". Verified allow-listed
+// identifiers include curl, Wget and python-requests, so we send a plain
+// curl-style UA. Do NOT spoof a browser UA: Akamai blocks those when the TLS
+// fingerprint does not match the claimed browser.
+const REQUEST_HEADERS = {
+  "User-Agent": "curl/8.4.0",
+  "Accept-Language": "en-US,en;q=0.9"
+};
 
 const ALLOWED_LOCATIONS = ["Asia", "Europe", "North America"];
 const ALLOWED_TYPES = ["1", "2", "3"];
@@ -105,7 +116,7 @@ async function fetchWithTimeout(url, options) {
 
 async function getFormBuildId() {
   const response = await fetchWithTimeout(SEARCH_PAGE, {
-    headers: { Accept: "text/html" }
+    headers: Object.assign({ Accept: "text/html" }, REQUEST_HEADERS)
   });
   if (!response.ok) throw new Error("Stock page returned HTTP " + response.status);
 
@@ -128,11 +139,11 @@ async function queryPart(partNumber, buildId, location, type) {
 
   const response = await fetchWithTimeout(AJAX_URL, {
     method: "POST",
-    headers: {
+    headers: Object.assign({
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Requested-With": "XMLHttpRequest",
       Accept: "application/json"
-    },
+    }, REQUEST_HEADERS),
     body: body.toString()
   });
 
@@ -217,6 +228,14 @@ module.exports = async (req, res) => {
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     res.status(200).json({ location, type, results });
   } catch (err) {
-    res.status(502).json({ error: (err && err.message) || "Stock check failed." });
+    const code = (err && err.cause && err.cause.code) || (err && err.code) || null;
+    res.status(502).json({
+      error: (err && err.message) || "Stock check failed.",
+      code,
+      step: "upstream",
+      hint:
+        "The proxy could not reach Panasonic's stock page. " +
+        "A 403/timeout usually means the request was blocked upstream."
+    });
   }
 };
