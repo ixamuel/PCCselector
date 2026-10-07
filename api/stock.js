@@ -42,6 +42,39 @@ const REQUEST_HEADERS = {
 const ALLOWED_LOCATIONS = ["Asia", "Europe", "North America"];
 const ALLOWED_TYPES = ["1", "2", "3"];
 
+// Preferred column order. Sellers outside this list are appended afterwards
+// (alphabetically) rather than being dropped.
+const DISTRIBUTOR_PRIORITY = [
+  "Farnell",
+  "Arrow",
+  "Avnet",
+  "Future",
+  "TTI",
+  "Rutronik",
+  "Gudeco",
+  "Schukat",
+  "TME",
+  "RS",
+  "Mouser",
+  "DigiKey"
+];
+
+// First match wins, so "Farnell, An Avnet Company" resolves to Farnell.
+const DISTRIBUTOR_ALIASES = [
+  ["Farnell", /farnell/i],
+  ["Arrow", /arrow/i],
+  ["Avnet", /avnet/i],
+  ["Future", /future/i],
+  ["TTI", /\btti\b/i],
+  ["Rutronik", /rutronik/i],
+  ["Gudeco", /gudeco/i],
+  ["Schukat", /schukat/i],
+  ["TME", /\btme\b|transfer\s+multisort/i],
+  ["RS", /rs[\s-]?components|rs[\s-]?online|radiospares|\brs\b/i],
+  ["Mouser", /mouser/i],
+  ["DigiKey", /digi[\s-]?key/i]
+];
+
 function decodeEntities(value) {
   return String(value)
     .replace(/&nbsp;/gi, " ")
@@ -102,6 +135,56 @@ function parseResults(dataHtml) {
     found: rows.length > 0,
     rows
   };
+}
+
+function normaliseDistributor(name) {
+  const value = String(name == null ? "" : name).trim();
+  if (!value) return "Unknown";
+  for (let i = 0; i < DISTRIBUTOR_ALIASES.length; i += 1) {
+    if (DISTRIBUTOR_ALIASES[i][1].test(value)) return DISTRIBUTOR_ALIASES[i][0];
+  }
+  return value;
+}
+
+function stockQuantity(value) {
+  const digits = String(value == null ? "" : value).replace(/[^0-9]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+// Collapse a part's listings to one entry per distributor, keeping the largest
+// quantity (Panasonic sometimes repeats the same distributor listing, e.g. the
+// same RS row three times).
+function collapseByDistributor(rows) {
+  const byDistributor = new Map();
+  rows.forEach((row) => {
+    const distributor = normaliseDistributor(row.distributor);
+    const quantity = stockQuantity(row.stock);
+    const existing = byDistributor.get(distributor);
+    if (!existing || quantity > existing.quantity) {
+      byDistributor.set(distributor, {
+        distributor,
+        distributorName: row.distributor,
+        stock: row.stock,
+        quantity,
+        buyUrl: row.buyUrl,
+        location: row.location,
+        date: row.date,
+        detailsUrl: row.detailsUrl
+      });
+    }
+  });
+  return Array.from(byDistributor.values());
+}
+
+function orderDistributors(names) {
+  return names.slice().sort((a, b) => {
+    const ia = DISTRIBUTOR_PRIORITY.indexOf(a);
+    const ib = DISTRIBUTOR_PRIORITY.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
 }
 
 async function fetchWithTimeout(url, options) {
@@ -201,16 +284,16 @@ module.exports = async (req, res) => {
 
   try {
     const buildId = await getFormBuildId();
-    const results = {};
+    const raw = {};
     const queue = parts.slice();
 
     const worker = async () => {
       while (queue.length > 0) {
         const partNumber = queue.shift();
         try {
-          results[partNumber] = await queryPart(partNumber, buildId, location, type);
+          raw[partNumber] = await queryPart(partNumber, buildId, location, type);
         } catch (err) {
-          results[partNumber] = {
+          raw[partNumber] = {
             partNumber,
             found: false,
             error: err && err.name === "AbortError" ? "Request timed out." : (err && err.message) || "Request failed.",
@@ -224,9 +307,45 @@ module.exports = async (req, res) => {
       Array.from({ length: Math.min(CONCURRENCY, parts.length) }, () => worker())
     );
 
+    // Collapse duplicate distributor listings and derive the column order.
+    const results = {};
+    const distributorSet = new Set();
+
+    parts.forEach((partNumber) => {
+      const entry = raw[partNumber] || { found: false, rows: [] };
+
+      if (entry.error || !entry.found) {
+        results[partNumber] = {
+          partNumber,
+          found: false,
+          error: entry.error || null,
+          total: 0,
+          rows: []
+        };
+        return;
+      }
+
+      const rows = collapseByDistributor(entry.rows);
+      rows.forEach((row) => distributorSet.add(row.distributor));
+
+      results[partNumber] = {
+        partNumber,
+        found: rows.length > 0,
+        error: null,
+        total: rows.reduce((sum, row) => sum + row.quantity, 0),
+        rows
+      };
+    });
+
     // Cache at the edge so repeated checks stay light on Panasonic.
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
-    res.status(200).json({ location, type, results });
+    res.status(200).json({
+      location,
+      type,
+      checkedAt: new Date().toISOString(),
+      distributors: orderDistributors(Array.from(distributorSet)),
+      results
+    });
   } catch (err) {
     const code = (err && err.cause && err.cause.code) || (err && err.code) || null;
     res.status(502).json({

@@ -27,7 +27,15 @@ proxy:
 2. **Export window** - a **Distributor stock** control in the toolbar. It checks
    every part number in the exported table (competitor rows included).
 
-Both list, per part number: **Stock | Distributor | Location | Date | Purchase**.
+Both show a **matrix table**: one row per part number, one column per distributor
+(Farnell, Arrow, Avnet, Future, TTI, Rutronik, Gudeco, Schukat, TME, RS, Mouser,
+DigiKey, then any others), a **Total &lt;region&gt; Stock** column, and a small
+"EU stock checked: DD.MM.YYYY" line above it. Clicking a quantity opens that
+distributor's purchase page.
+
+Duplicate listings from the same distributor are merged (the largest quantity is
+kept), so each seller appears once per part, and the Total is the sum of those
+per-distributor figures.
 
 **Why a proxy is needed:** Panasonic's stock search
 (`industrial.panasonic.com/ww/stock-search`) is a Drupal form whose results load

@@ -1610,7 +1610,8 @@ function stockApiUrl() {
   return new URL("api/stock", window.location.href).href;
 }
 
-function escapeStockHtml(value) {
+// Escapes a value for safe insertion into HTML.
+function escapeHtml(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({
     "&": "&amp;",
     "<": "&lt;",
@@ -1618,6 +1619,100 @@ function escapeStockHtml(value) {
     '"': "&quot;",
     "'": "&#39;"
   }[character]));
+}
+
+// Short region label used in the "... stock checked" line and Total column.
+function stockRegionLabel(location) {
+  if (location === "North America") return "NA";
+  if (location === "Asia") return "Asia";
+  return "EU";
+}
+
+// Formats an ISO timestamp as DD.MM.YYYY (falls back to the current date).
+function stockFormatDate(iso) {
+  const date = iso ? new Date(iso) : new Date();
+  if (isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return day + "." + month + "." + date.getFullYear();
+}
+
+// Small muted line shown above the table, e.g. "EU stock checked: 07.10.2026".
+function buildStockMetaHtml(payload) {
+  const location = (payload && payload.location) || "Europe";
+  return (
+    '<span class="stock-meta">' +
+    escapeHtml(stockRegionLabel(location)) +
+    " stock checked: " +
+    escapeHtml(stockFormatDate(payload && payload.checkedAt)) +
+    "</span>"
+  );
+}
+
+// Builds the matrix table: one row per part number, one column per distributor
+// (in Panasonic-priority order) and a Total column. The source of this function
+// (and its helpers) is injected into the export window so both stay identical.
+function buildStockTableHtml(payload, order) {
+  const results = (payload && payload.results) || {};
+  const distributors = (payload && payload.distributors) || [];
+  const location = (payload && payload.location) || "Europe";
+  const label = stockRegionLabel(location);
+  const parts = order || [];
+
+  if (parts.length === 0) {
+    return '<div class="stock-empty">No part numbers to check.</div>';
+  }
+
+  let html =
+    '<div class="stock-matrix-scroll"><table class="stock-table stock-matrix"><thead><tr>' +
+    '<th class="stock-pn-col">Panasonic PN</th>';
+  distributors.forEach((name) => {
+    html += "<th>" + escapeHtml(name) + "</th>";
+  });
+  html += '<th class="stock-total-col">Total ' + escapeHtml(label) + " Stock</th></tr></thead><tbody>";
+
+  parts.forEach((pn) => {
+    const result = results[pn] || {};
+    const byDistributor = {};
+    (result.rows || []).forEach((row) => {
+      byDistributor[row.distributor] = row;
+    });
+
+    html += '<tr><td class="stock-pn-col">' + escapeHtml(pn) + "</td>";
+    distributors.forEach((name) => {
+      const cell = byDistributor[name];
+      if (cell && cell.quantity > 0) {
+        const text = escapeHtml(cell.stock || String(cell.quantity));
+        html +=
+          '<td class="stock-cell-num">' +
+          (cell.buyUrl
+            ? '<a href="' + escapeHtml(cell.buyUrl) + '" target="_blank" rel="noopener noreferrer">' + text + "</a>"
+            : text) +
+          "</td>";
+      } else {
+        html += '<td class="stock-cell-num stock-dash">&mdash;</td>';
+      }
+    });
+    const total = typeof result.total === "number" ? result.total : 0;
+    html +=
+      '<td class="stock-cell-num stock-total">' +
+      (total > 0 ? total.toLocaleString("en-US") : "&mdash;") +
+      "</td></tr>";
+  });
+
+  html += "</tbody></table></div>";
+
+  const failed = parts.filter((pn) => results[pn] && results[pn].error);
+  if (failed.length > 0) {
+    html +=
+      '<div class="stock-error">Could not check: ' +
+      failed.map((pn) => escapeHtml(pn)).join(", ") +
+      "</div>";
+  } else if (distributors.length === 0) {
+    html += '<div class="stock-empty">No distributor stock found.</div>';
+  }
+
+  return html;
 }
 
 function openStockCheck() {
@@ -1670,7 +1765,7 @@ function runStockCheck() {
       if (elements.stockModalStatus) elements.stockModalStatus.textContent = "";
       elements.stockModalBody.innerHTML =
         '<div class="stock-error">Stock check is unavailable here (' +
-        escapeStockHtml(error.message) +
+        escapeHtml(error.message) +
         ').<br>It runs through the deployed site&rsquo;s <code>/api/stock</code> endpoint.</div>';
     })
     .finally(() => {
@@ -1679,46 +1774,8 @@ function runStockCheck() {
 }
 
 function renderStockCheck(data, order) {
-  const results = (data && data.results) || {};
-  const location = elements.stockRegion ? elements.stockRegion.value : "Europe";
-  let withStock = 0;
-  let html = "";
-
-  order.forEach((pn) => {
-    const result = results[pn];
-    if (!result) return;
-
-    html += '<div class="stock-part-group"><div class="stock-part-title">' + escapeStockHtml(pn) + "</div>";
-
-    if (result.error) {
-      html += '<div class="stock-error">' + escapeStockHtml(result.error) + "</div>";
-    } else if (!result.found) {
-      html += '<div class="stock-empty">No distributor stock found.</div>';
-    } else {
-      withStock += 1;
-      html +=
-        '<table class="stock-table"><thead><tr><th>Stock</th><th>Distributor</th><th>Location</th><th>Date</th><th>Buy</th></tr></thead><tbody>';
-      result.rows.forEach((row) => {
-        html +=
-          "<tr><td>" + escapeStockHtml(row.stock) +
-          "</td><td>" + escapeStockHtml(row.distributor) +
-          "</td><td>" + escapeStockHtml(row.location) +
-          "</td><td>" + escapeStockHtml(row.date) +
-          "</td><td>" +
-          (row.buyUrl
-            ? '<a href="' + escapeStockHtml(row.buyUrl) + '" target="_blank" rel="noopener noreferrer">Purchase</a>'
-            : "\u2014") +
-          "</td></tr>";
-      });
-      html += "</tbody></table>";
-    }
-    html += "</div>";
-  });
-
-  elements.stockModalBody.innerHTML = html || '<div class="stock-empty">No results.</div>';
-  if (elements.stockModalStatus) {
-    elements.stockModalStatus.textContent = withStock + " of " + order.length + " with stock (" + location + ")";
-  }
+  elements.stockModalBody.innerHTML = buildStockTableHtml(data, order);
+  if (elements.stockModalStatus) elements.stockModalStatus.innerHTML = buildStockMetaHtml(data);
 }
 
 function openProducts() {
@@ -1975,14 +2032,21 @@ th{background:#f0f2f4}
 .stock-panel-head .toolbar-hint { margin-left: auto; }
 .stock-hide { margin: 0; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; min-width: 0; font-size: 12px; }
 .stock-panel-body { padding: 4px 12px 12px; }
-.stock-part-group { margin-top: 12px; }
-.stock-part-title { font-weight: 600; font-size: 13px; color: #0058a3; margin-bottom: 4px; }
 .stock-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: #fff; }
 .stock-table th, .stock-table td { border: 1px solid #e1e7ee; padding: 6px 8px; text-align: left; }
 .stock-table th { background: #eff5fb; font-weight: 600; }
 .stock-empty, .stock-loading { font-size: 13px; color: #69727d; padding: 6px 0; }
 .stock-error { font-size: 13px; color: #b3261e; padding: 6px 0; }
 .stock-panel-body code { background: #eef2f6; padding: 1px 4px; border-radius: 4px; }
+.stock-meta { display: inline-block; font-size: 12px; color: #69727d; }
+.stock-matrix-scroll { overflow-x: auto; margin-top: 8px; }
+.stock-table.stock-matrix { min-width: 100%; }
+.stock-table.stock-matrix th, .stock-table.stock-matrix td { white-space: nowrap; }
+.stock-table.stock-matrix thead th { position: sticky; top: 0; z-index: 1; }
+.stock-pn-col { text-align: left; font-weight: 500; }
+.stock-cell-num { text-align: right; font-variant-numeric: tabular-nums; }
+.stock-total-col, .stock-total { text-align: right; font-weight: 700; background: #f6faff; }
+.stock-dash { color: #b3bcc6; }
 .summary-section { margin: 0 36px 0 30px; }
 /* Toggle switch styles */
 .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -2710,6 +2774,11 @@ window.addEventListener('resize', positionRowControls);
 
 // --- Panasonic distributor stock check (served by the same-origin /api/stock) ---
 const STOCK_API_URL = ${JSON.stringify(stockApiUrl)};
+// Shared renderer, injected from the main bundle so both surfaces stay identical.
+const stockRegionLabel = ${stockRegionLabel.toString()};
+const stockFormatDate = ${stockFormatDate.toString()};
+const buildStockMetaHtml = ${buildStockMetaHtml.toString()};
+const buildStockTableHtml = ${buildStockTableHtml.toString()};
 const stockPanel = document.getElementById('stockPanel');
 const stockPanelBody = document.getElementById('stockPanelBody');
 const stockPanelStatus = document.getElementById('stockPanelStatus');
@@ -2772,37 +2841,8 @@ function runStockCheck() {
 }
 
 function renderStockResults(data) {
-  const results = (data && data.results) || {};
-  const order = stockPartNumbers();
-  let withStock = 0;
-  let html = '';
-
-  order.forEach(function (pn) {
-    const result = results[pn];
-    if (!result) return;
-
-    html += '<div class="stock-part-group"><div class="stock-part-title">' + escapeHtml(pn) + '</div>';
-
-    if (result.error) {
-      html += '<div class="stock-error">' + escapeHtml(result.error) + '</div>';
-    } else if (!result.found) {
-      html += '<div class="stock-empty">No distributor stock found.</div>';
-    } else {
-      withStock += 1;
-      html += '<table class="stock-table"><thead><tr><th>Stock</th><th>Distributor</th><th>Location</th><th>Date</th><th>Buy</th></tr></thead><tbody>';
-      result.rows.forEach(function (row) {
-        html += '<tr><td>' + escapeHtml(row.stock) + '</td><td>' + escapeHtml(row.distributor) +
-          '</td><td>' + escapeHtml(row.location) + '</td><td>' + escapeHtml(row.date) + '</td><td>' +
-          (row.buyUrl ? '<a href="' + escapeHtml(row.buyUrl) + '" target="_blank" rel="noopener noreferrer">Purchase</a>' : '—') +
-          '</td></tr>';
-      });
-      html += '</tbody></table>';
-    }
-    html += '</div>';
-  });
-
-  stockPanelBody.innerHTML = html || '<div class="stock-empty">No results.</div>';
-  stockPanelStatus.textContent = withStock + ' of ' + order.length + ' with stock';
+  stockPanelBody.innerHTML = buildStockTableHtml(data, stockPartNumbers());
+  stockPanelStatus.innerHTML = buildStockMetaHtml(data);
 }
 
 // Initial render
