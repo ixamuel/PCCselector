@@ -1335,6 +1335,18 @@ function bindEvents() {
     });
   }
 
+  if (elements.selectionTags) {
+    elements.selectionTags.addEventListener("dragover", handleTagDragover);
+    elements.selectionTags.addEventListener("drop", (event) => {
+      if (!draggingTagEl) return;
+      event.preventDefault();
+    });
+    elements.selectionTags.addEventListener("pointerdown", handleTagPointerDown);
+    elements.selectionTags.addEventListener("pointermove", handleTagPointerMove);
+    elements.selectionTags.addEventListener("pointerup", handleTagPointerUp);
+    elements.selectionTags.addEventListener("pointercancel", handleTagPointerCancel);
+  }
+
   window.addEventListener("resize", () => {
     syncSidebarHeight();
   });
@@ -1375,12 +1387,161 @@ function toggleSelection(pn, isSelected) {
   applyFilters();
 }
 
+// --- Drag & drop reordering of selection pills ---
+let draggingTagEl = null;
+
+// Find the pill nearest to the pointer and decide whether the dragged pill
+// should be inserted before or after it. Works for both single-row and
+// wrapped (multi-row) layouts.
+function getDragTargetTag(container, x, y) {
+  const tags = Array.from(container.querySelectorAll(".selection-tag:not(.dragging)"));
+  let closest = null;
+  let closestScore = Number.POSITIVE_INFINITY;
+  let insertAfter = false;
+
+  tags.forEach((tag) => {
+    const rect = tag.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = x - cx;
+    const dy = y - cy;
+    const score = dx * dx + dy * dy;
+    if (score < closestScore) {
+      closestScore = score;
+      closest = tag;
+      const sameRow = y >= rect.top && y <= rect.bottom;
+      insertAfter = sameRow ? x > cx : y > cy;
+    }
+  });
+
+  return closest ? { element: closest, after: insertAfter } : null;
+}
+
+function handleTagDragStart(event) {
+  // Never start a drag from the remove button - let it click.
+  if (event.target.closest("button")) {
+    event.preventDefault();
+    return;
+  }
+  const tag = event.currentTarget;
+  draggingTagEl = tag;
+  tag.classList.add("dragging");
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", tag.dataset.pn || "");
+  }
+}
+
+// Reposition the dragged pill relative to the current pointer position.
+function moveDraggedTag(x, y) {
+  const container = elements.selectionTags;
+  const target = getDragTargetTag(container, x, y);
+  if (!target) {
+    container.appendChild(draggingTagEl);
+  } else if (target.after) {
+    container.insertBefore(draggingTagEl, target.element.nextSibling);
+  } else {
+    container.insertBefore(draggingTagEl, target.element);
+  }
+}
+
+function handleTagDragover(event) {
+  if (!draggingTagEl) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  moveDraggedTag(event.clientX, event.clientY);
+}
+
+// --- Touch / pen support (native HTML5 drag events do not fire on touch) ---
+let pointerTagDrag = null;
+
+function handleTagPointerDown(event) {
+  if (event.pointerType === "mouse") return; // native drag events handle the mouse
+  if (event.button !== undefined && event.button !== 0) return;
+  if (event.target.closest("button")) return; // let the remove button click
+  const tag = event.target.closest(".selection-tag");
+  if (!tag) return;
+  pointerTagDrag = {
+    pointerId: event.pointerId,
+    tag,
+    startX: event.clientX,
+    startY: event.clientY,
+    started: false
+  };
+}
+
+function handleTagPointerMove(event) {
+  const drag = pointerTagDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  if (!drag.started) {
+    const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+    if (moved < 6) return; // ignore taps and tiny jitters
+    drag.started = true;
+    draggingTagEl = drag.tag;
+    drag.tag.classList.add("dragging");
+    try {
+      elements.selectionTags.setPointerCapture(event.pointerId);
+    } catch (err) {
+      /* pointer capture unsupported - dragging still works */
+    }
+  }
+  event.preventDefault();
+  moveDraggedTag(event.clientX, event.clientY);
+}
+
+function handleTagPointerUp(event) {
+  const drag = pointerTagDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  pointerTagDrag = null;
+  if (!drag.started) return;
+  try {
+    elements.selectionTags.releasePointerCapture(event.pointerId);
+  } catch (err) {
+    /* no-op */
+  }
+  handleTagDragEnd();
+}
+
+function handleTagPointerCancel(event) {
+  const drag = pointerTagDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  pointerTagDrag = null;
+  if (drag.started) handleTagDragEnd();
+}
+
+// Persist the visual (DOM) order back into the selection model so that
+// "Copy PNs", "Export Table" and the site links all follow the new order.
+function syncSelectedFromDom() {
+  if (!elements.selectionTags) return;
+  const domOrder = Array.from(elements.selectionTags.querySelectorAll(".selection-tag"))
+    .map((tag) => tag.dataset.pn)
+    .filter((pn) => pn !== undefined);
+  const next = domOrder.filter((pn) => state.selected.includes(pn));
+  // Safety: keep any selected PN that somehow isn't represented in the DOM.
+  state.selected.forEach((pn) => {
+    if (!next.includes(pn)) next.push(pn);
+  });
+  state.selected = next;
+}
+
+function handleTagDragEnd() {
+  if (draggingTagEl) draggingTagEl.classList.remove("dragging");
+  draggingTagEl = null;
+  syncSelectedFromDom();
+  updateSelectionPanel();
+}
+
 function updateSelectionPanel() {
   if (!elements.selectionTags || !elements.selectionPanel) return;
   elements.selectionTags.innerHTML = "";
   state.selected.forEach((pn) => {
     const tag = document.createElement("div");
     tag.className = "selection-tag";
+    tag.draggable = true;
+    tag.dataset.pn = pn;
+    tag.title = "Drag to reorder";
+    tag.addEventListener("dragstart", handleTagDragStart);
+    tag.addEventListener("dragend", handleTagDragEnd);
     const text = document.createElement("span");
     text.textContent = pn;
     const remove = document.createElement("button");
