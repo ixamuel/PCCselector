@@ -12,6 +12,47 @@ This is the standalone version of the Inductor Selection Tool.
 1. Connect your GitHub repository to Vercel.
 2. Vercel will automatically detect the `index.html` and deploy it as a static site.
 3. No build command is required.
+4. The `api/` folder is deployed as Serverless Functions. `api/stock.js` powers the
+export window's distributor stock check (see below). It is optional - the app
+works without it, but the stock check needs it to be deployed.
+
+## Distributor Stock Check (Export Window)
+
+The export window ("Export Table") has a **Distributor stock** control: a region
+selector (Europe / North America / Asia, default **Europe**) and a **Check Stock**
+button. It looks up distributor inventory for every part number in the current
+table (competitor rows included) and lists stock, distributor, location, date and
+a purchase link per part.
+
+**Why a proxy is needed:** Panasonic's stock search
+(`industrial.panasonic.com/ww/stock-search`) is a Drupal form whose results load
+from an AJAX endpoint that sends **no CORS headers**, so the browser cannot call
+it directly, and the page cannot be embedded in an iframe. The app therefore
+ships a small same-origin serverless proxy:
+
+- `api/stock.js` - a Vercel Function implementing the two-step flow (GET the page
+  for a `form_build_id` token, then POST the AJAX endpoint) and returning
+  normalised JSON.
+
+Call it directly:
+
+```
+GET /api/stock?location=Europe&type=1&pn=ETQP3MR47KVP&pn=ETQP5MR33YLC
+```
+
+`location`: `Asia` | `Europe` | `North America`.
+`type`: `1` = Exact, `2` = Begins With, `3` = Contains.
+
+Requirements & caveats:
+- **Deployment:** the stock check only works on the deployed site (Vercel), where
+  `/api/stock` exists. Opened locally via `file://` it shows a friendly
+  "unavailable here" message instead.
+- **Coverage:** Panasonic's tool does not list every series - many automotive
+  inductors (e.g. `ETQP...`) report "Inventory is not found".
+- **Bot protection:** Panasonic sits behind Akamai, which blocks requests that
+  spoof a browser User-Agent from a non-browser client. The proxy therefore sends
+  a plain (non-browser) User-Agent.
+- Please respect Panasonic's Terms of Use when using this feature.
 
 ## Recent Updates (v2.7)
 

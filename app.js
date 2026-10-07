@@ -1785,6 +1785,11 @@ function openExportTable() {
     remarks: "" // empty remarks initially
   }));
 
+  // Absolute URL of the stock-check proxy, resolved against the deployed site
+  // (e.g. https://<app>.vercel.app/api/stock). Opened locally via file:// this
+  // has no server to talk to, and the UI reports that gracefully.
+  const stockApiUrl = new URL("api/stock", window.location.href).href;
+
   const html = `<!doctype html>
 <html><head><meta charset="utf-8" />
 <title>Selected Inductors</title>
@@ -1813,6 +1818,23 @@ th{background:#f0f2f4}
 }
 .export-toolbar .toolbar-separator { width: 1px; height: 24px; background: #d7dce2; margin: 0 2px; }
 .export-toolbar .toolbar-hint { color: #69727d; font-size: 12px; margin-left: 2px; }
+.stock-select { height: 34px; border-radius: 8px; border: 1px solid #ccc; background: #fff; padding: 0 8px; font-size: 13px; }
+.export-toolbar .stock-action { background: rgba(0, 88, 163, 0.12); border-color: rgba(0, 88, 163, 0.4); color: #0058a3; }
+.export-toolbar .stock-action:hover { background: rgba(0, 88, 163, 0.18); border-color: #0058a3; }
+.stock-panel { margin: 0 0 16px; border: 1px solid #d7e3f0; border-radius: 10px; background: #f8fbff; }
+.stock-panel-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #e8f0fb; border-radius: 9px 9px 0 0; border-bottom: 1px solid #d7e3f0; }
+.stock-panel-title { font-weight: 600; color: #0058a3; font-size: 14px; }
+.stock-panel-head .toolbar-hint { margin-left: auto; }
+.stock-hide { margin: 0; padding: 4px 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; min-width: 0; font-size: 12px; }
+.stock-panel-body { padding: 4px 12px 12px; }
+.stock-part-group { margin-top: 12px; }
+.stock-part-title { font-weight: 600; font-size: 13px; color: #0058a3; margin-bottom: 4px; }
+.stock-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: #fff; }
+.stock-table th, .stock-table td { border: 1px solid #e1e7ee; padding: 6px 8px; text-align: left; }
+.stock-table th { background: #eff5fb; font-weight: 600; }
+.stock-empty, .stock-loading { font-size: 13px; color: #69727d; padding: 6px 0; }
+.stock-error { font-size: 13px; color: #b3261e; padding: 6px 0; }
+.stock-panel-body code { background: #eef2f6; padding: 1px 4px; border-radius: 4px; }
 .summary-section { margin: 0 36px 0 30px; }
 /* Toggle switch styles */
 .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -2067,7 +2089,23 @@ td.competitor-cell.datasheet-cell {
 <button id="addCompetitorBtn">Add Competitor</button>
 <button id="clearCompetitorsBtn">Clear Competitors</button>
 <span class="toolbar-separator" aria-hidden="true"></span>
+<label class="toolbar-hint" for="stockLocation">Distributor stock</label>
+<select id="stockLocation" class="stock-select">
+<option value="Europe" selected>Europe</option>
+<option value="North America">North America</option>
+<option value="Asia">Asia</option>
+</select>
+<button id="stockCheckBtn" class="stock-action">Check Stock</button>
+<span class="toolbar-separator" aria-hidden="true"></span>
 <span class="toolbar-hint">Use the handle beside a row to reorder it.</span>
+</div>
+<div id="stockPanel" class="stock-panel" hidden>
+<div class="stock-panel-head">
+<span class="stock-panel-title">Distributor stock</span>
+<span id="stockPanelStatus" class="toolbar-hint"></span>
+<button id="stockHideBtn" class="stock-hide" type="button">Hide</button>
+</div>
+<div id="stockPanelBody" class="stock-panel-body"></div>
 </div>
 <div class="toggle-container">
   <span class="toggle-label">Show Tol %, I (⊿T=40C) Method A A, Isat ΔL -20% A, DCR Max mΩ</span>
@@ -2521,6 +2559,98 @@ window.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') clearActiveDrag();
 });
 window.addEventListener('resize', positionRowControls);
+
+// --- Panasonic distributor stock check (served by the same-origin /api/stock) ---
+const STOCK_API_URL = ${JSON.stringify(stockApiUrl)};
+const stockPanel = document.getElementById('stockPanel');
+const stockPanelBody = document.getElementById('stockPanelBody');
+const stockPanelStatus = document.getElementById('stockPanelStatus');
+const stockLocationSelect = document.getElementById('stockLocation');
+const stockCheckBtn = document.getElementById('stockCheckBtn');
+
+document.getElementById('stockHideBtn').addEventListener('click', function () {
+  stockPanel.hidden = true;
+});
+
+stockCheckBtn.addEventListener('click', runStockCheck);
+
+// Unique Panasonic part numbers, in the current table order (competitor rows too).
+function stockPartNumbers() {
+  const seen = {};
+  const list = [];
+  mainRows.forEach(function (row) {
+    const pn = (row.pn || '').trim();
+    if (pn && !seen[pn]) { seen[pn] = true; list.push(pn); }
+  });
+  return list;
+}
+
+function runStockCheck() {
+  const pns = stockPartNumbers();
+  stockPanel.hidden = false;
+
+  if (pns.length === 0) {
+    stockPanelStatus.textContent = '';
+    stockPanelBody.innerHTML = '<div class="stock-empty">No part numbers to check.</div>';
+    return;
+  }
+
+  const location = stockLocationSelect.value;
+  stockCheckBtn.disabled = true;
+  stockPanelStatus.textContent = 'Checking ' + pns.length + ' part number' + (pns.length === 1 ? '' : 's') + '…';
+  stockPanelBody.innerHTML = '<div class="stock-loading">Contacting Panasonic…</div>';
+
+  const params = new URLSearchParams();
+  params.set('location', location);
+  params.set('type', '1');
+  pns.forEach(function (pn) { params.append('pn', pn); });
+
+  fetch(STOCK_API_URL + '?' + params.toString())
+    .then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    })
+    .then(renderStockResults)
+    .catch(function (err) {
+      stockPanelStatus.textContent = '';
+      stockPanelBody.innerHTML = '<div class="stock-error">Stock check is unavailable here (' + escapeHtml(err.message) + ').<br>It runs through the deployed site&rsquo;s <code>/api/stock</code> endpoint.</div>';
+    })
+    .finally(function () { stockCheckBtn.disabled = false; });
+}
+
+function renderStockResults(data) {
+  const results = (data && data.results) || {};
+  const order = stockPartNumbers();
+  let withStock = 0;
+  let html = '';
+
+  order.forEach(function (pn) {
+    const result = results[pn];
+    if (!result) return;
+
+    html += '<div class="stock-part-group"><div class="stock-part-title">' + escapeHtml(pn) + '</div>';
+
+    if (result.error) {
+      html += '<div class="stock-error">' + escapeHtml(result.error) + '</div>';
+    } else if (!result.found) {
+      html += '<div class="stock-empty">No distributor stock found.</div>';
+    } else {
+      withStock += 1;
+      html += '<table class="stock-table"><thead><tr><th>Stock</th><th>Distributor</th><th>Location</th><th>Date</th><th>Buy</th></tr></thead><tbody>';
+      result.rows.forEach(function (row) {
+        html += '<tr><td>' + escapeHtml(row.stock) + '</td><td>' + escapeHtml(row.distributor) +
+          '</td><td>' + escapeHtml(row.location) + '</td><td>' + escapeHtml(row.date) + '</td><td>' +
+          (row.buyUrl ? '<a href="' + escapeHtml(row.buyUrl) + '" target="_blank" rel="noopener noreferrer">Purchase</a>' : '—') +
+          '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+  });
+
+  stockPanelBody.innerHTML = html || '<div class="stock-empty">No results.</div>';
+  stockPanelStatus.textContent = withStock + ' of ' + order.length + ' with stock';
+}
 
 // Initial render
 renderMainTable();
