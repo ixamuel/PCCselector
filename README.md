@@ -16,13 +16,18 @@ This is the standalone version of the Inductor Selection Tool.
 export window's distributor stock check (see below). It is optional - the app
 works without it, but the stock check needs it to be deployed.
 
-## Distributor Stock Check (Export Window)
+## Distributor Stock Check
 
-The export window ("Export Table") has a **Distributor stock** control: a region
-selector (Europe / North America / Asia, default **Europe**) and a **Check Stock**
-button. It looks up distributor inventory for every part number in the current
-table (competitor rows included) and lists stock, distributor, location, date and
-a purchase link per part.
+Stock check is available in two places, both served by the same `/api/stock`
+proxy:
+
+1. **Main page** - a **Stock Check** button in the selection bar (right after
+   *Farnell*). It checks the **currently selected** part numbers and opens a
+   results dialog (with a region selector and Refresh).
+2. **Export window** - a **Distributor stock** control in the toolbar. It checks
+   every part number in the exported table (competitor rows included).
+
+Both list, per part number: **Stock | Distributor | Location | Date | Purchase**.
 
 **Why a proxy is needed:** Panasonic's stock search
 (`industrial.panasonic.com/ww/stock-search`) is a Drupal form whose results load

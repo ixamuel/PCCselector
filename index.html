@@ -84,11 +84,33 @@
                 <button id="octopartButton" class="ghost btn-octopart" type="button">Octopart</button>
                 <button id="mouserButton" class="ghost btn-mouser" type="button">Mouser</button>
                 <button id="farnellButton" class="ghost btn-farnell" type="button">Farnell</button>
+                <button id="stockCheckButton" class="ghost btn-stock" type="button">Stock Check</button>
               </div>
             </div>
           </div>
         </section>
       </main>
+    </div>
+  </div>
+
+  <div id="stockModal" class="stock-modal hidden" role="dialog" aria-modal="true" aria-labelledby="stockModalTitle">
+    <div class="stock-modal-backdrop" data-stock-close></div>
+    <div class="stock-modal-dialog">
+      <div class="stock-modal-head">
+        <div class="stock-modal-title" id="stockModalTitle">Distributor stock</div>
+        <label class="stock-modal-region" for="stockRegion">
+          <span>Region</span>
+          <select id="stockRegion">
+            <option value="Europe" selected>Europe</option>
+            <option value="North America">North America</option>
+            <option value="Asia">Asia</option>
+          </select>
+        </label>
+        <button id="stockRefresh" class="ghost" type="button">Refresh</button>
+        <button id="stockClose" class="stock-modal-close" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div id="stockModalStatus" class="stock-modal-status"></div>
+      <div id="stockModalBody" class="stock-modal-body"></div>
     </div>
   </div>
 

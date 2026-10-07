@@ -135,6 +135,13 @@ const elements = {
   mouserButton: document.getElementById("mouserButton"),
   farnellButton: document.getElementById("farnellButton"),
   octopartButton: document.getElementById("octopartButton"),
+  stockCheckButton: document.getElementById("stockCheckButton"),
+  stockModal: document.getElementById("stockModal"),
+  stockRegion: document.getElementById("stockRegion"),
+  stockClose: document.getElementById("stockClose"),
+  stockRefresh: document.getElementById("stockRefresh"),
+  stockModalStatus: document.getElementById("stockModalStatus"),
+  stockModalBody: document.getElementById("stockModalBody"),
   clearSelectedButton: document.getElementById("clearSelectedButton"),
   clearFiltersButton: document.getElementById("clearFiltersButton"),
   sidebarClose: document.getElementById("sidebarClose"),
@@ -1335,6 +1342,29 @@ function bindEvents() {
     });
   }
 
+  if (elements.stockCheckButton) {
+    elements.stockCheckButton.addEventListener("click", openStockCheck);
+  }
+  if (elements.stockClose) {
+    elements.stockClose.addEventListener("click", closeStockCheck);
+  }
+  if (elements.stockModal) {
+    elements.stockModal.addEventListener("click", (event) => {
+      if (event.target.hasAttribute("data-stock-close")) closeStockCheck();
+    });
+  }
+  if (elements.stockRegion) {
+    elements.stockRegion.addEventListener("change", () => runStockCheck());
+  }
+  if (elements.stockRefresh) {
+    elements.stockRefresh.addEventListener("click", () => runStockCheck());
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && elements.stockModal && !elements.stockModal.classList.contains("hidden")) {
+      closeStockCheck();
+    }
+  });
+
   if (elements.selectionTags) {
     elements.selectionTags.addEventListener("dragover", handleTagDragover);
     elements.selectionTags.addEventListener("drop", (event) => {
@@ -1571,6 +1601,116 @@ function updateSelectionPanel() {
   if (elements.mouserButton) elements.mouserButton.disabled = disabled;
   if (elements.octopartButton) elements.octopartButton.disabled = disabled;
   if (elements.farnellButton) elements.farnellButton.disabled = disabled;
+  if (elements.stockCheckButton) elements.stockCheckButton.disabled = disabled;
+}
+
+// --- Distributor stock check (main page) -------------------------------------
+// Talks to the same-origin /api/stock serverless proxy (see api/stock.js).
+function stockApiUrl() {
+  return new URL("api/stock", window.location.href).href;
+}
+
+function escapeStockHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[character]));
+}
+
+function openStockCheck() {
+  if (state.selected.length === 0 || !elements.stockModal) return;
+  elements.stockModal.classList.remove("hidden");
+  runStockCheck();
+}
+
+function closeStockCheck() {
+  if (elements.stockModal) elements.stockModal.classList.add("hidden");
+}
+
+function runStockCheck() {
+  if (!elements.stockModalBody) return;
+  const pns = state.selected.slice();
+  const location = elements.stockRegion ? elements.stockRegion.value : "Europe";
+
+  if (pns.length === 0) {
+    elements.stockModalBody.innerHTML = '<div class="stock-empty">No part numbers selected.</div>';
+    return;
+  }
+
+  if (elements.stockCheckButton) elements.stockCheckButton.disabled = true;
+  if (elements.stockModalStatus) {
+    elements.stockModalStatus.textContent =
+      "Checking " + pns.length + " part number" + (pns.length === 1 ? "" : "s") + " (" + location + ")\u2026";
+  }
+  elements.stockModalBody.innerHTML = '<div class="stock-loading">Contacting Panasonic\u2026</div>';
+
+  const params = new URLSearchParams();
+  params.set("location", location);
+  params.set("type", "1");
+  pns.forEach((pn) => params.append("pn", pn));
+
+  fetch(stockApiUrl() + "?" + params.toString())
+    .then((response) => {
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      return response.json();
+    })
+    .then((data) => renderStockCheck(data, pns))
+    .catch((error) => {
+      if (elements.stockModalStatus) elements.stockModalStatus.textContent = "";
+      elements.stockModalBody.innerHTML =
+        '<div class="stock-error">Stock check is unavailable here (' +
+        escapeStockHtml(error.message) +
+        ').<br>It runs through the deployed site&rsquo;s <code>/api/stock</code> endpoint.</div>';
+    })
+    .finally(() => {
+      if (elements.stockCheckButton) elements.stockCheckButton.disabled = state.selected.length === 0;
+    });
+}
+
+function renderStockCheck(data, order) {
+  const results = (data && data.results) || {};
+  const location = elements.stockRegion ? elements.stockRegion.value : "Europe";
+  let withStock = 0;
+  let html = "";
+
+  order.forEach((pn) => {
+    const result = results[pn];
+    if (!result) return;
+
+    html += '<div class="stock-part-group"><div class="stock-part-title">' + escapeStockHtml(pn) + "</div>";
+
+    if (result.error) {
+      html += '<div class="stock-error">' + escapeStockHtml(result.error) + "</div>";
+    } else if (!result.found) {
+      html += '<div class="stock-empty">No distributor stock found.</div>';
+    } else {
+      withStock += 1;
+      html +=
+        '<table class="stock-table"><thead><tr><th>Stock</th><th>Distributor</th><th>Location</th><th>Date</th><th>Buy</th></tr></thead><tbody>';
+      result.rows.forEach((row) => {
+        html +=
+          "<tr><td>" + escapeStockHtml(row.stock) +
+          "</td><td>" + escapeStockHtml(row.distributor) +
+          "</td><td>" + escapeStockHtml(row.location) +
+          "</td><td>" + escapeStockHtml(row.date) +
+          "</td><td>" +
+          (row.buyUrl
+            ? '<a href="' + escapeStockHtml(row.buyUrl) + '" target="_blank" rel="noopener noreferrer">Purchase</a>'
+            : "\u2014") +
+          "</td></tr>";
+      });
+      html += "</tbody></table>";
+    }
+    html += "</div>";
+  });
+
+  elements.stockModalBody.innerHTML = html || '<div class="stock-empty">No results.</div>';
+  if (elements.stockModalStatus) {
+    elements.stockModalStatus.textContent = withStock + " of " + order.length + " with stock (" + location + ")";
+  }
 }
 
 function openProducts() {
