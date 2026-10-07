@@ -1667,7 +1667,8 @@ function buildStockTableHtml(payload, order) {
     '<div class="stock-matrix-scroll"><table class="stock-table stock-matrix"><thead><tr>' +
     '<th class="stock-pn-col">Panasonic PN</th>';
   distributors.forEach((name) => {
-    html += "<th>" + escapeHtml(name) + "</th>";
+    const columnClass = "stock-col-" + String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    html += '<th class="' + columnClass + '">' + escapeHtml(name) + "</th>";
   });
   html += '<th class="stock-total-col">Total ' + escapeHtml(label) + " Stock</th></tr></thead><tbody>";
 
@@ -2047,6 +2048,7 @@ th{background:#f0f2f4}
 .stock-cell-num { text-align: right; font-variant-numeric: tabular-nums; }
 .stock-total-col, .stock-total { text-align: right; font-weight: 700; background: #f6faff; }
 .stock-dash { color: #b3bcc6; }
+.stock-table.stock-matrix thead th.stock-col-farnell { background: rgba(16, 150, 80, 0.1); border-color: rgba(16, 150, 80, 0.4); color: #0a7a3f; }
 .summary-section { margin: 0 36px 0 30px; }
 /* Toggle switch styles */
 .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }

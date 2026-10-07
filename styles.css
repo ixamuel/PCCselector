@@ -629,6 +629,8 @@ details.filter[open] .accordion-icon {
   border-radius: var(--radius);
   border: 1px solid var(--line);
   padding: 20px;
+  /* Reserve space for the fixed selection stack at the bottom. */
+  padding-bottom: 170px;
   display: grid;
   gap: 16px;
   align-self: start;
@@ -675,7 +677,7 @@ table {
   font-size: 13px;
 }
 
-thead th {
+#resultsTable thead th {
   position: sticky;
   top: 0;
   background: #f0f5ff;
@@ -690,9 +692,10 @@ thead th {
   z-index: 2;
 }
 
-/* Sticky first column (PN) */
-table th:nth-child(2),
-table td:nth-child(2) {
+/* Sticky first column (PN) - scoped to the results table so it does not
+   affect other tables such as the stock-check matrix. */
+#resultsTable th:nth-child(2),
+#resultsTable td:nth-child(2) {
   position: sticky;
   left: 0;
   background: #fff;
@@ -700,19 +703,19 @@ table td:nth-child(2) {
   z-index: 3;
 }
 
-table td:nth-child(2) {
+#resultsTable td:nth-child(2) {
   background: #fff;
   z-index: 1;
 }
 
-thead th:nth-child(2) {
+#resultsTable thead th:nth-child(2) {
   background: #f0f5ff !important;
   /* Force header color */
   z-index: 10;
 }
 
-table th:nth-child(1),
-table td:nth-child(1) {
+#resultsTable th:nth-child(1),
+#resultsTable td:nth-child(1) {
   position: sticky;
   left: -1px;
   /* To prevent gap */
@@ -720,12 +723,12 @@ table td:nth-child(1) {
   z-index: 3;
 }
 
-table td:nth-child(1) {
+#resultsTable td:nth-child(1) {
   background: #fff;
   z-index: 1;
 }
 
-thead th:nth-child(1) {
+#resultsTable thead th:nth-child(1) {
   background: #f0f5ff !important;
   z-index: 10;
 }
@@ -863,10 +866,24 @@ tbody td {
 }
 
 .selection-panel {
-  padding-bottom: 140px;
+  position: fixed;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
+  max-width: 920px;
+  width: auto;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Let clicks pass through the gap between the tags and the action bar. */
+  pointer-events: none;
+  transition: left 0.3s ease, max-width 0.3s ease;
 }
 
 .selection-tags {
+  pointer-events: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -874,19 +891,12 @@ tbody td {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(0, 88, 163, 0.2);
-  position: fixed;
-  bottom: 76px;
-  left: 16px;
-  right: 16px;
-  margin: 0 auto;
-  max-width: 920px;
-  width: auto;
-  z-index: 19;
-  transition: left 0.3s ease, max-width 0.3s ease;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 @media (min-width: 701px) {
-  body:not(.sidebar-hidden) .selection-tags {
+  body:not(.sidebar-hidden) .selection-panel {
     left: 336px;
     /* Sidebar (320px) + content padding (16px) */
     max-width: 800px;
@@ -894,7 +904,7 @@ tbody td {
 }
 
 @media (min-width: 701px) and (max-width: 1250px) {
-  body:not(.sidebar-hidden) .selection-tags {
+  body:not(.sidebar-hidden) .selection-panel {
     left: 296px;
     /* Sidebar (280px) + content padding (16px) */
     max-width: 600px;
@@ -943,41 +953,19 @@ tbody td {
 }
 
 .selection-pill {
+  pointer-events: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  position: fixed;
-  bottom: 12px;
-  left: 16px;
-  right: 16px;
-  margin: 0 auto;
-  max-width: 920px;
-  width: auto;
   background: rgba(255, 255, 255, 0.98);
   padding: 8px 12px;
   border-radius: 12px;
   border: 1px solid rgba(0, 88, 163, 0.2);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  z-index: 20;
-  max-height: 120px;
+  max-height: 160px;
   overflow-y: auto;
-  transition: left 0.3s ease, max-width 0.3s ease;
-}
-
-@media (min-width: 701px) {
-  body:not(.sidebar-hidden) .selection-pill {
-    left: 336px;
-    max-width: 800px;
-  }
-}
-
-@media (min-width: 701px) and (max-width: 1250px) {
-  body:not(.sidebar-hidden) .selection-pill {
-    left: 296px;
-    max-width: 600px;
-  }
 }
 
 .selection-divider {
@@ -1263,6 +1251,13 @@ tbody tr.results-row--selected {
 
 .stock-dash {
   color: #b3bcc6;
+}
+
+/* Distributor header accents - Farnell mirrors the Farnell button colour. */
+.stock-table.stock-matrix thead th.stock-col-farnell {
+  background: rgba(16, 150, 80, 0.1);
+  border-color: rgba(16, 150, 80, 0.4);
+  color: #0a7a3f;
 }
 
 .stock-table {
@@ -1551,11 +1546,6 @@ tbody tr.results-row--selected {
   }
 
   .selection-tags {
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-width: none;
-    bottom: 155px;
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 4px;
@@ -1565,7 +1555,6 @@ tbody tr.results-row--selected {
     border: 1px solid var(--line);
     max-height: 100px;
     overflow-y: auto;
-    z-index: 100;
   }
 
   .selection-tag {
@@ -1599,12 +1588,15 @@ tbody tr.results-row--selected {
     flex-shrink: 0;
   }
 
-  .selection-pill {
+  .selection-panel {
     left: 8px;
     right: 8px;
-    width: auto;
-    max-width: none;
     bottom: 10px;
+    max-width: none;
+    z-index: 100;
+  }
+
+  .selection-pill {
     padding: 6px;
     background: rgba(255, 255, 255, 0.98);
     border-radius: 12px;
@@ -1612,9 +1604,8 @@ tbody tr.results-row--selected {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: auto auto auto !important;
     gap: 4px;
-    z-index: 101;
   }
 
   .selection-divider {
@@ -1662,6 +1653,11 @@ tbody tr.results-row--selected {
 
   #farnellButton {
     grid-column: 2;
+    grid-row: 3;
+  }
+
+  #stockCheckButton {
+    grid-column: 3;
     grid-row: 3;
   }
 

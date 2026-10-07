@@ -11,9 +11,11 @@
  *
  * Notes:
  *  - No session cookie is required; a token from a fresh GET is enough.
- *  - Panasonic sits behind Akamai, which blocks requests that spoof a browser
- *    User-Agent from a non-browser client. We therefore send NO browser-style
- *    User-Agent (plain requests are accepted).
+ *  - Panasonic sits behind Akamai, which rejects requests that arrive with NO
+ *    User-Agent (Vercel's fetch/undici sends none by default), blocks agent
+ *    names such as "node"/"undici", and blocks spoofed browser UAs (TLS
+ *    fingerprint mismatch). Allow-listed clients (curl, Wget, python-requests,
+ *    axios) pass, so we send a curl-style User-Agent. See REQUEST_HEADERS.
  *
  * Usage: GET /api/stock?location=Europe&type=1&pn=ETQP3MR47KVP&pn=ETQP5MR33YLC
  *   location: Asia | Europe | North America   (default Europe)

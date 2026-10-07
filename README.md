@@ -37,6 +37,11 @@ Duplicate listings from the same distributor are merged (the largest quantity is
 kept), so each seller appears once per part, and the Total is the sum of those
 per-distributor figures.
 
+> **Reusing this in another selection tool?** See
+> [`STOCK-CHECK-PLAYBOOK.md`](STOCK-CHECK-PLAYBOOK.md) - it documents how Panasonic's
+> stock check works, every gotcha we hit, and a single copy-paste prompt. The API proxy
+> is product-agnostic, so only the part-number source changes.
+
 **Why a proxy is needed:** Panasonic's stock search
 (`industrial.panasonic.com/ww/stock-search`) is a Drupal form whose results load
 from an AJAX endpoint that sends **no CORS headers**, so the browser cannot call
