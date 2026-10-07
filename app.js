@@ -2048,7 +2048,7 @@ th{background:#f0f2f4}
 .stock-cell-num { text-align: right; font-variant-numeric: tabular-nums; }
 .stock-total-col, .stock-total { text-align: right; font-weight: 700; background: #f6faff; }
 .stock-dash { color: #b3bcc6; }
-.stock-table.stock-matrix thead th.stock-col-farnell { background: rgba(16, 150, 80, 0.1); border-color: rgba(16, 150, 80, 0.4); color: #0a7a3f; }
+.stock-table.stock-matrix thead th.stock-col-farnell { background: rgba(16, 150, 80, 0.1); color: #0a7a3f; }
 .summary-section { margin: 0 36px 0 30px; }
 /* Toggle switch styles */
 .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }

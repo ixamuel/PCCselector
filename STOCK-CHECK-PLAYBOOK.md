@@ -274,11 +274,11 @@ Verified example (matches the source data exactly):
 - Header row: `Panasonic PN` | one `<th>` per distributor | `Total <region> Stock`.
 - Cells: quantity as a link to `buyUrl`, otherwise `—`; numeric cells right-aligned.
 - Each distributor `<th>` gets a class `stock-col-<slug>` so individual vendors can be
-  accented. Farnell is green (matching the Farnell button):
+  accented. Farnell is green (matching the Farnell button) but keeps the **same neutral
+  borders as the other cells**:
   ```css
   .stock-table.stock-matrix thead th.stock-col-farnell {
     background: rgba(16, 150, 80, 0.1);
-    border-color: rgba(16, 150, 80, 0.4);
     color: #0a7a3f;
   }
   ```
@@ -342,7 +342,7 @@ and keep the LARGEST quantity per distributor per part; total = sum of those.
 STYLING
 - Matrix table with sticky header, right-aligned numeric cells, bold Total column,
   horizontal scroll wrapper, and a green Farnell header (bg rgba(16,150,80,.1),
-  border rgba(16,150,80,.4), color #0a7a3f).
+  color #0a7a3f) that keeps the same neutral borders as the other cells.
 - Modal z-index must exceed the sidebar (use 300).
 
 SEE STOCK-CHECK-PLAYBOOK.md §8 for the gotcha checklist before you finish.
@@ -398,7 +398,7 @@ curl -sS -A "$UA" -H "Content-Type: application/x-www-form-urlencoded" \
 - [ ] Distributor repeated once only; Total equals the sum of visible cells.
 - [ ] Numbers link to the distributor's purchase page; blanks show `—`.
 - [ ] Meta line shows `EU stock checked: DD.MM.YYYY`.
-- [ ] Farnell header is green; other headers are neutral.
+- [ ] Farnell header is green with neutral borders like the other cells; other headers are neutral.
 - [ ] ✕ / backdrop / Escape all dismiss; errors show the server's message.
 - [ ] Export window (if used) renders the identical table.
 
@@ -888,7 +888,7 @@ fetch(stockApiUrl() + "?" + params.toString())
 | `.stock-pn-col` / `.stock-total-col` / `.stock-total` | PN + Total columns (Total bold) |
 | `.stock-cell-num` | Right-aligned tabular numbers |
 | `.stock-dash` | The `—` placeholder |
-| `.stock-col-<slug>` | Per-distributor header hook (`.stock-col-farnell` is green) |
+| `.stock-col-<slug>` | Per-distributor header hook (`.stock-col-farnell` = green bg + text, neutral borders) |
 | `.stock-empty`, `.stock-loading`, `.stock-error` | State messages |
 
 > Copy these rules from `styles.css` **and** from the export-window `<style>` block —

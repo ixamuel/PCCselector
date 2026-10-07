@@ -1253,10 +1253,10 @@ tbody tr.results-row--selected {
   color: #b3bcc6;
 }
 
-/* Distributor header accents - Farnell mirrors the Farnell button colour. */
+/* Distributor header accents - Farnell mirrors the Farnell button colour.
+   Borders intentionally stay neutral so they match the other cells. */
 .stock-table.stock-matrix thead th.stock-col-farnell {
   background: rgba(16, 150, 80, 0.1);
-  border-color: rgba(16, 150, 80, 0.4);
   color: #0a7a3f;
 }
 
