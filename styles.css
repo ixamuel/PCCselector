@@ -290,6 +290,92 @@ button.ghost:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.sidebar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.simple-mode-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.simple-mode-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Keep the header on one line on the narrowest phones; the toggle itself
+   remains labelled via its aria-label/title. */
+@media (max-width: 370px) {
+  .simple-mode-label {
+    display: none;
+  }
+}
+
+/* Simple-mode toggle switch. The .toggle-* classes used by the export window
+   live in that window's inline styles and are not available on the main page. */
+.simple-mode-control .toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  flex: none;
+}
+
+.simple-mode-control .toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.simple-mode-control .toggle-slider::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.simple-mode-control .toggle-checkbox {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.simple-mode-control .toggle-checkbox:checked + .toggle-slider {
+  background: var(--accent);
+}
+
+.simple-mode-control .toggle-checkbox:checked + .toggle-slider::before {
+  transform: translateX(18px);
+}
+
+.simple-mode-control .toggle-checkbox:focus-visible + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(0, 88, 163, 0.25);
 }
 
 .sidebar-actions {
@@ -318,6 +404,10 @@ button.ghost:hover {
 }
 
 @media (min-width: 701px) {
+  .sidebar-actions {
+    display: none;
+  }
+
   .sidebar-clear {
     display: none;
   }
@@ -757,13 +847,27 @@ thead th.is-active {
   font-size: 10px;
   color: var(--muted);
   letter-spacing: 0.4px;
-  text-transform: uppercase;
+  /* No uppercase transform: it would turn µH into ΜH and mΩ into MΩ. */
+  text-transform: none;
 }
 
 th.col-tight,
 td.col-tight {
   padding-left: 6px;
   padding-right: 6px;
+}
+
+/* Simple mode: hide optional columns in the main results table only.
+   display:none keeps the DOM order intact, so the sticky nth-child rules for
+   the checkbox and PN columns keep working. */
+#resultsTable.simple-mode th.simple-hide,
+#resultsTable.simple-mode td.simple-hide {
+  display: none;
+}
+
+/* Simple mode also hides the filters that only control hidden columns. */
+#filters.simple-mode .simple-filter-hide {
+  display: none;
 }
 
 .filter.temp-muted {

@@ -7,14 +7,14 @@ data.forEach((row, index) => {
 });
 
 const numericFilters = [
-  { key: "Lo (uH)", label: "Inductance (uH)", histogram: true, scale: "log" },
-  { key: "Lo Tol. (%)", label: "Tolerance (%)" },
+  { key: "Lo (uH)", label: "Inductance (µH)", histogram: true, scale: "log" },
+  { key: "Lo Tol. (%)", label: "Tolerance (%)", hideInSimpleMode: true },
   { key: "DCR Typ (mOhm)", label: "DCR Typ (mΩ)", scale: "log" },
-  { key: "DCR Max (mOhm)", label: "DCR Max (mΩ)", scale: "log" },
-  { key: "Method B (A typ at 40℃)", label: "Method B (A)", histogram: true, scale: "log" },
-  { key: "Method A (A typ at 40℃)", label: "Method A (A)", histogram: true, scale: "log" },
+  { key: "DCR Max (mOhm)", label: "DCR Max (mΩ)", scale: "log", hideInSimpleMode: true },
+  { key: "Method B (A typ at 40℃)", label: "I (⊿T=40℃) Method B (A)", simpleLabel: "I (⊿T=40℃) (A)", histogram: true, scale: "log" },
+  { key: "Method A (A typ at 40℃)", label: "I (⊿T=40℃) Method A (A)", histogram: true, scale: "log", hideInSimpleMode: true },
   { key: "⊿L=-30% typ (A)", label: "ΔL -30% (A)" },
-  { key: "⊿L=-20% typ (A)", label: "ΔL -20% (A)" },
+  { key: "⊿L=-20% typ (A)", label: "ΔL -20% (A)", hideInSimpleMode: true },
   { key: "Ir (A)", label: "Ir (A)" },
   { key: "Max Voltage (V)", label: "Max Voltage (V)" },
   { key: "L (mm)", label: "Length (mm)" },
@@ -67,11 +67,12 @@ const resultColumns = [
   { key: "__select__", label: "", sub: "", type: "select", sortable: false },
   { key: "Part Number", label: "PN", sub: "", type: "pn" },
   { key: "Lo (uH)", label: "L", sub: "µH", type: "number" },
-  { key: "Lo Tol. (%)", label: "Tol", sub: "%", type: "number" },
+  { key: "Lo Tol. (%)", label: "Tol", sub: "%", type: "number", hideInSimpleMode: true },
   {
     key: "Method B (A typ at 40℃)",
     label: "I (⊿T=40C)",
     sub: "Method B A",
+    simpleSub: "A",
     type: "number",
     className: "col-tight"
   },
@@ -80,12 +81,13 @@ const resultColumns = [
     label: "I (⊿T=40C)",
     sub: "Method A A",
     type: "number",
-    className: "col-tight"
+    className: "col-tight",
+    hideInSimpleMode: true
   },
   { key: "⊿L=-30% typ (A)", label: "Isat ΔL -30%", sub: "A", type: "number" },
-  { key: "⊿L=-20% typ (A)", label: "Isat ΔL -20%", sub: "A", type: "number" },
+  { key: "⊿L=-20% typ (A)", label: "Isat ΔL -20%", sub: "A", type: "number", hideInSimpleMode: true },
   { key: "DCR Typ (mOhm)", label: "DCR", sub: "Typ mΩ", type: "number" },
-  { key: "DCR Max (mOhm)", label: "DCR", sub: "Max mΩ", type: "number" },
+  { key: "DCR Max (mOhm)", label: "DCR", sub: "Max mΩ", type: "number", hideInSimpleMode: true },
   { key: "Size (mm)", label: "Size", sub: "mm", type: "size" },
   { key: "Max Height (mm)", label: "Max H", sub: "mm", type: "number" },
   { key: "Temp Range (deg.C)", label: "Temp Range", sub: "°C", type: "text" },
@@ -95,6 +97,14 @@ const resultColumns = [
   { key: "Status", label: "Status", sub: "", type: "text" }
 ];
 
+const simpleModeHiddenKeys = new Set(
+  resultColumns.filter((column) => column.hideInSimpleMode).map((column) => column.key)
+);
+
+const simpleModeHiddenFilterKeys = new Set(
+  numericFilters.filter((filter) => filter.hideInSimpleMode).map((filter) => filter.key)
+);
+
 const state = {
   search: "",
   numeric: {},
@@ -102,6 +112,7 @@ const state = {
   numericTargets: {},
   selected: [],
   compareOnly: false,
+  simpleMode: false,
   sortKey: null,
   sortDirection: null,
   baseSidebarHeight: null
@@ -115,6 +126,8 @@ const elements = {
   filters: document.getElementById("filters"),
   resultsCount: document.getElementById("resultsCount"),
   resultsBody: document.querySelector("#resultsTable tbody"),
+  resultsTable: document.getElementById("resultsTable"),
+  simpleModeToggle: document.getElementById("simpleModeToggle"),
   emptyState: document.getElementById("emptyState"),
   resultsSection: document.querySelector(".results"),
   searchInput: document.getElementById("searchInput"),
@@ -257,6 +270,7 @@ function prepareData() {
 }
 
 function initState() {
+  state.simpleMode = localStorage.getItem("pcc_simpleMode") === "true";
   numericFilters.forEach((filter) => {
     state.numeric[filter.key] = { min: null, max: null };
     state.numericTargets[filter.key] = null;
@@ -339,6 +353,9 @@ function renderComboFilter(combo, numericMap, openByDefault) {
     const meta = numericMeta[filter.key];
     if (!meta || meta.min === null || meta.max === null) return;
     const block = renderNumericBlock(filter, meta);
+    if (filter.hideInSimpleMode) {
+      block.classList.add("simple-filter-hide");
+    }
     body.appendChild(block);
   });
 
@@ -350,6 +367,9 @@ function renderNumericFilter(filter, meta, openByDefault) {
   const wrapper = document.createElement("details");
   wrapper.className = "filter";
   wrapper.dataset.key = filter.key;
+  if (filter.hideInSimpleMode) {
+    wrapper.classList.add("simple-filter-hide");
+  }
   if (openByDefault) wrapper.open = true;
 
   const summary = document.createElement("summary");
@@ -413,6 +433,7 @@ function findNearestRange(values, target) {
 function renderNumericBlock(filter, meta) {
   const block = document.createElement("div");
   block.className = "combo-block";
+  block.dataset.key = filter.key;
   const title = document.createElement("div");
   title.className = "combo-title";
   title.textContent = filter.label;
@@ -863,16 +884,21 @@ function updateCategoricalUI() {
   });
 }
 
+function getFilterDisplayLabel(filter) {
+  return state.simpleMode && filter.simpleLabel ? filter.simpleLabel : filter.label;
+}
+
 function updateActiveFilters() {
   const chips = [];
 
   numericFilters.forEach((filter) => {
     const meta = state.numeric[filter.key];
     if (!meta) return;
+    const filterLabel = getFilterDisplayLabel(filter);
     const target = state.numericTargets[filter.key];
     if (target && typeof target === "object") {
       chips.push({
-        label: `${filter.label}: ≈ ${formatNumber(target.target)} (range ${formatNumber(
+        label: `${filterLabel}: ≈ ${formatNumber(target.target)} (range ${formatNumber(
           target.rangeMin
         )}–${formatNumber(target.rangeMax)})`,
         key: filter.key,
@@ -883,7 +909,7 @@ function updateActiveFilters() {
     if (meta.min !== null || meta.max !== null) {
       const min = meta.min !== null ? meta.min : numericMeta[filter.key].min;
       const max = meta.max !== null ? meta.max : numericMeta[filter.key].max;
-      chips.push({ label: `${filter.label}: ${min}–${max}`, key: filter.key, type: "numeric" });
+      chips.push({ label: `${filterLabel}: ${min}–${max}`, key: filter.key, type: "numeric" });
     }
   });
 
@@ -927,7 +953,9 @@ function updateActiveFilters() {
 
 function resetNumericInputs(key) {
   const meta = numericMeta[key];
-  const filterEl = document.querySelector(`details.filter[data-key="${CSS.escape(key)}"]`);
+  const filterEl =
+    document.querySelector(`details.filter[data-key="${CSS.escape(key)}"]`) ||
+    document.querySelector(`.combo-block[data-key="${CSS.escape(key)}"]`);
   if (!filterEl || !meta) return;
   const filter = numericFilters.find((item) => item.key === key);
   const useLog = filter ? shouldUseLogScale(filter, meta) : false;
@@ -971,6 +999,9 @@ function renderHeader() {
     if (column.className) {
       th.classList.add(column.className);
     }
+    if (column.hideInSimpleMode) {
+      th.classList.add("simple-hide");
+    }
     const top = document.createElement("div");
     top.className = "th-top";
     const label = document.createElement("span");
@@ -983,7 +1014,8 @@ function renderHeader() {
     th.appendChild(top);
     const sub = document.createElement("div");
     sub.className = "th-sub";
-    sub.textContent = column.sub || "";
+    sub.textContent =
+      state.simpleMode && column.simpleSub ? column.simpleSub : column.sub || "";
     th.appendChild(sub);
     if (column.sortable !== false) {
       th.addEventListener("click", () => cycleSort(column.key));
@@ -1024,6 +1056,53 @@ function updateSortIndicators() {
       indicator.textContent = "";
     }
   });
+}
+
+function clearSimpleModeFilters() {
+  simpleModeHiddenFilterKeys.forEach((key) => {
+    if (!state.numeric[key]) return;
+    state.numeric[key].min = null;
+    state.numeric[key].max = null;
+    state.numericTargets[key] = null;
+    resetNumericInputs(key);
+  });
+}
+
+function syncSimpleModeUI() {
+  if (elements.resultsTable) {
+    elements.resultsTable.classList.toggle("simple-mode", state.simpleMode);
+  }
+  if (elements.filters) {
+    elements.filters.classList.toggle("simple-mode", state.simpleMode);
+  }
+
+  // Mirror the export window: "Method B A" normally, "A" in simple mode.
+  const methodBSub = elements.headerRow.querySelector(
+    'th[data-key="Method B (A typ at 40℃)"] .th-sub'
+  );
+  if (methodBSub) {
+    methodBSub.textContent = state.simpleMode ? "A" : "Method B A";
+  }
+
+  // Shorten filter captions that have a simple-mode variant.
+  numericFilters.forEach((filter) => {
+    if (!filter.simpleLabel) return;
+    const filterLabel = elements.filters
+      ? elements.filters.querySelector(
+          `details.filter[data-key="${CSS.escape(filter.key)}"] summary > span:first-child`
+        )
+      : null;
+    if (filterLabel) {
+      filterLabel.textContent = getFilterDisplayLabel(filter);
+    }
+  });
+
+  // Never leave the table sorted by a column that is now hidden.
+  if (state.simpleMode && simpleModeHiddenKeys.has(state.sortKey)) {
+    state.sortKey = null;
+    state.sortDirection = null;
+    updateSortIndicators();
+  }
 }
 
 function sortResults(rows) {
@@ -1095,6 +1174,9 @@ function renderResults(rows) {
       const td = document.createElement("td");
       if (column.className) {
         td.classList.add(column.className);
+      }
+      if (column.hideInSimpleMode) {
+        td.classList.add("simple-hide");
       }
       if (column.type === "select") {
         td.className = "select-cell";
@@ -1256,6 +1338,18 @@ function bindEvents() {
   });
 
   elements.clearButton.addEventListener("click", clearAll);
+
+  if (elements.simpleModeToggle) {
+    elements.simpleModeToggle.addEventListener("change", (event) => {
+      state.simpleMode = event.target.checked;
+      if (state.simpleMode) {
+        clearSimpleModeFilters();
+      }
+      localStorage.setItem("pcc_simpleMode", String(state.simpleMode));
+      syncSimpleModeUI();
+      applyFilters();
+    });
+  }
 
   if (elements.sidebarToggle) {
     elements.sidebarToggle.addEventListener("click", () => {
@@ -2954,4 +3048,8 @@ renderHeader();
 updateSortIndicators();
 bindEvents();
 applyFilters();
+if (elements.simpleModeToggle) {
+  elements.simpleModeToggle.checked = state.simpleMode;
+}
+syncSimpleModeUI();
 syncSidebarHeight();

@@ -95,6 +95,15 @@ Requirements & caveats:
 - **Independent operation**: Both toggles work independently without affecting each other
 - **Data preservation**: Remarks are preserved when toggling between states
 
+### Simple Mode (main results table)
+- **Sidebar toggle**: The **Simple mode** switch next to the Filters header hides the Tol, Method A, Isat ΔL -20% and DCR Max columns
+- **Matching filters**: The Tolerance, Method A and ΔL -20% filter widgets are hidden too; inside the DCR combo only the DCR Max block is hidden (DCR Typ stays available)
+- **Filter state**: Turning Simple mode on clears any active values for those hidden filters, so the table is never constrained by an invisible filter
+- **Method B header**: The column sub-header changes from `Method B A` to `A` while Simple mode is on
+- **Method B filter caption**: The filter label and its active-filter chip shorten from `I (⊿T=40℃) Method B (A)` to `I (⊿T=40℃) (A)`
+- **Persistence**: The setting is stored in `localStorage` (`pcc_simpleMode`) and restored on reload
+- **Scope**: Only the main results table and filter sidebar are affected; the export window keeps all columns
+
 ### Editable Remarks Cells
 - **Contenteditable cells**: Remarks column uses `contenteditable="true"` cells instead of input fields
 - **Easy copying**: Users can select and copy text directly from cells (compatible with Outlook)

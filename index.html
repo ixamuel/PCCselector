@@ -18,7 +18,16 @@
     <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-title">Filters</div>
+        <div class="sidebar-heading">
+          <div class="sidebar-title">Filters</div>
+          <div class="simple-mode-control" title="Hide Tol, Method A, Isat ΔL -20% and DCR Max">
+            <span class="simple-mode-label">Simple mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-checkbox" id="simpleModeToggle" aria-label="Simple mode" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
         <div class="sidebar-actions">
           <button id="sidebarClear" class="sidebar-clear" title="Clear all filters">Clear</button>
           <button id="sidebarClose" class="sidebar-close" aria-label="Close filters">×</button>
