@@ -851,6 +851,12 @@ thead th.is-active {
   text-transform: none;
 }
 
+/* Column headers are left-aligned; keep the values on that same edge.
+   The checkbox cell stays centered. */
+#resultsTable tbody td:not(.select-cell) {
+  text-align: left;
+}
+
 /* Keep these headers aligned with their body values: the ID-scoped rule
    above is more specific than a bare th.col-tight selector. */
 #resultsTable thead th.col-tight,
@@ -1646,10 +1652,12 @@ tbody tr.results-row--selected {
     padding: 4px 6px;
   }
 
-  /* #resultsTable thead th is more specific than the rule above, so restate
-     the compact padding here. Without this, header labels sit 6px to the
-     right of their body values on mobile. */
-  #resultsTable thead th {
+  /* Headers and values share the same compact padding, so every label sits
+     directly above the left edge of its column's values. The ID-qualified
+     selector is required because #resultsTable thead th above is more
+     specific than a bare thead th / tbody td rule. */
+  #resultsTable thead th,
+  #resultsTable tbody td {
     padding: 4px 6px;
   }
 
