@@ -851,8 +851,10 @@ thead th.is-active {
   text-transform: none;
 }
 
-th.col-tight,
-td.col-tight {
+/* Keep these headers aligned with their body values: the ID-scoped rule
+   above is more specific than a bare th.col-tight selector. */
+#resultsTable thead th.col-tight,
+#resultsTable tbody td.col-tight {
   padding-left: 6px;
   padding-right: 6px;
 }
@@ -1641,6 +1643,13 @@ tbody tr.results-row--selected {
 
   thead th,
   tbody td {
+    padding: 4px 6px;
+  }
+
+  /* #resultsTable thead th is more specific than the rule above, so restate
+     the compact padding here. Without this, header labels sit 6px to the
+     right of their body values on mobile. */
+  #resultsTable thead th {
     padding: 4px 6px;
   }
 
