@@ -1,5 +1,5 @@
 {
-  "_comment": "Vibration resistance per PCC-M type, read from the 'Vibration resistance (G)' column of the datasheet tables in datasheet/markdown-export/*.md (values verified against the rendered PDF pages). 'g' is the rating in G, or null when the datasheet has no vibration column / no datasheet exists. 'source' is the markdown export the value was read from; build_data.py audits that every rated part number is listed there.",
+  "_comment": "Vibration resistance per PCC-M type, read from the 'Vibration resistance (G)' column of the datasheet tables in datasheet/markdown-export/*.md (values verified against the rendered PDF pages). 'g' is the rating in G, or null when the datasheet has no vibration column / no datasheet exists. 'source' is the markdown export the value was read from; refresh.py audits that every rated part number is listed there.",
   "ratings": {
     "PCC-D1413H": { "g": null, "source": null, "note": "no datasheet available" },
     "PCC-M0530M": { "g": 10, "source": "AGL0000C59-M.md" },

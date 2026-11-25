@@ -8,7 +8,7 @@ tables and is the single place to edit when a value is added or corrected.
 This module merges the values into the records (keyed by `Series (Size)`) and
 audits the result against the markdown exports, so the map cannot silently
 drift from the datasheets: every rated part number must be listed in the
-markdown file named as its `source`.  Stdlib only, like build_data.py.
+markdown file named as its `source`.  Stdlib only, like refresh.py.
 """
 import json
 import re

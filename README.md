@@ -18,28 +18,70 @@ works without it, but the stock check needs it to be deployed.
 
 ## Data (`data.js`)
 
-`data.js` is generated from `Inductor all data.xlsx` - do not edit it by hand:
+`data.js` is generated - do not edit it by hand. One command does the whole
+quarterly refresh (unlock the new workbook, export the data sheet, rebuild
+`data.js`):
 
 ```
-python build_data.py
+python refresh.py
 ```
 
-The build prints a coverage report and writes `data.js` (`window.INDUCTOR_DATA`)
-with the same 165 records.
+It picks the newest release folder under `Source/` and prints what it changed.
+Requires Python 3.9+ and `openpyxl` (`pip install openpyxl`); reading the
+workbook itself uses the standard library only.
+
+### Quarterly checklist
+
+1. Create `Source/<MM.YYYY>/` (e.g. `Source/07.2026/`) and drop the new
+   `Panasonic ... .xlsm` in it. Nothing else has to be renamed - the release
+   label comes from the folder name (`Source/04.2026/` → 04.2026).
+2. Run `python refresh.py`. It writes:
+
+   | File | Content |
+   | --- | --- |
+   | `Source/<MM.YYYY>/PCC_unlocked.xlsm` | VBA password flag bypassed, `All Data`, `Utility`, `計算sheet`, `Wav` unhidden - see that folder's `unlock_instructions.md`. |
+   | `Inductor all data.xlsx` | Values-only snapshot of the `All Data` sheet (header row 10, columns A...CC). Formulas, the `IMAGE()` helpers (`#NAME?`), the table and the external link are dropped; engineer comments are re-anchored by part number; formatting and widths are reused from the previous file. |
+   | `data.js` | Built from that snapshot, with the vibration ratings merged in. |
+   | `source_meta.json` | Release, SHA-256 of every generated file, record count and header labels - used by the drift checks. |
+
+   Numbers stay numbers (so Excel can sort and filter them). A cached formula
+   result whose full 17-digit precision would not survive a numeric cell is
+   kept as text instead, so the snapshot never rounds a value; Excel marks those
+   few cells as "number stored as text".
+
+3. Read the build log. `WARNING:` lines flag a changed layout (missing required
+   column, added/removed column, suspicious record-count jump), a comment that
+   could not be re-anchored, or a series missing from `vibration.json` (a
+   paste-ready stub is printed).
+4. Review `git diff --stat data.js` and commit.
+
+Options:
+
+```
+python refresh.py --list          # releases found under Source/, newest first
+python refresh.py --xlsm <file>   # import one specific workbook
+python refresh.py --build-only    # rebuild data.js from Inductor all data.xlsx
+python refresh.py --verify        # fail if a generated file changed since the build
+```
+
+`build_data.py` was replaced by `refresh.py` - same parsing code, one entry
+point - so a workbook that used to be imported with `python build_data.py` is
+now imported with `python refresh.py`.
 
 ### Vibration rating
 
 The workbook has a `Vibration` column, but it holds no usable ratings (mostly
 empty, plus 15 rows containing `-40 to +130` by mistake). The **Vibration**
 column in the results table (after *Temp Range*, unit `G`) is therefore filled
-from the datasheets at build time:
+from the datasheets during the build:
 
 - Values live in [`datasheet/vibration.json`](datasheet/vibration.json), keyed by
   `Series (Size)`, and are read from the `Vibration resistance (G)` column of the
   tables in `datasheet/markdown-export/*.md` (the PDFs are the original source).
-- `"g": null` means no published rating yet (shown as `—`): the C67-HF datasheet
-  has no vibration column, and `PCC-D1413H` / `PCC-M0750M-LL` have no datasheet.
-  The 15 *High Performance* rows have no `Series (Size)` and stay empty.
+- `"g": null` means no published rating yet (shown as `—`): `PCC-D1413H` and
+  `PCC-M0750M-LL` have no datasheet, the C67-HF datasheet (`PCC-M0530M-H`,
+  `PCC-M0630M-H`) has no vibration column, and the 15 *High Performance* rows
+  have no `Series (Size)` and stay empty.
 - `"source"` names the markdown export the value came from. The build checks that
   every rated part number is listed in that file and warns on drift, so the map
   cannot silently disagree with the datasheets.
@@ -48,11 +90,13 @@ from the datasheets at build time:
 - Ratings are per PCC-M type, not per part number - every part of a type shares
   the value printed in its datasheet.
 
-To add or correct a rating, edit `vibration.json` and rerun `python build_data.py`.
-The values are embedded into `data.js`, so the app still works when opened
-directly from disk (`file://`) - no runtime fetch of the JSON.
+To add or correct a rating, edit `vibration.json` and rerun
+`python refresh.py --build-only` (or just `python refresh.py`). The values are
+embedded into `data.js`, so the app still works when opened directly from disk
+(`file://`) - no runtime fetch of the JSON.
 
-Current coverage: **145 / 165 records rated** (5-50 G), 20 unrated.
+Current coverage (release 04.2026): **147 / 167 records rated** (5-50 G), 20
+unrated.
 
 
 Stock check is available in two places, both served by the same `/api/stock`
