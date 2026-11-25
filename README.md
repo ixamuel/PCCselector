@@ -35,29 +35,36 @@ workbook itself uses the standard library only.
 1. Create `Source/<MM.YYYY>/` (e.g. `Source/07.2026/`) and drop the new
    `Panasonic ... .xlsm` in it. Nothing else has to be renamed - the release
    label comes from the folder name (`Source/04.2026/` → 04.2026).
-2. Run `python refresh.py`. It writes:
+2. Run `python refresh.py --dry-run` first. It writes nothing and reports the
+   picked file and release, the columns that were added/removed/renamed, the
+   part numbers that came or went, the per-column differences against the
+   current `data.js`, and the vibration coverage.
+3. Run `python refresh.py`. It writes:
 
    | File | Content |
    | --- | --- |
    | `Source/<MM.YYYY>/PCC_unlocked.xlsm` | VBA password flag bypassed, `All Data`, `Utility`, `計算sheet`, `Wav` unhidden - see that folder's `unlock_instructions.md`. |
-   | `Inductor all data.xlsx` | Values-only snapshot of the `All Data` sheet (header row 10, columns A...CC). Formulas, the `IMAGE()` helpers (`#NAME?`), the table and the external link are dropped; engineer comments are re-anchored by part number; formatting and widths are reused from the previous file. |
-   | `data.js` | Built from that snapshot, with the vibration ratings merged in. |
-   | `source_meta.json` | Release, SHA-256 of every generated file, record count and header labels - used by the drift checks. |
+   | `Inductor all data.xlsx` | Values-only snapshot of the `All Data` sheet (header row 10, columns A...CC). Formulas, the `IMAGE()` helpers (`#NAME?`), the table and the external link are dropped; engineer comments are re-anchored by part number **and** header label; formatting and widths are copied by header label, so a column inserted by Panasonic cannot shift every number format by one. |
+   | `data.js` | Built from that snapshot, with the vibration ratings merged in and the Series/Feature pair normalised onto the UI schema (see [Column semantics](#column-semantics)). |
+   | `source_meta.json` | Release, SHA-256 of every generated file, record count, header labels and the number of fields in `data.js` - used by the drift checks. |
 
    Numbers stay numbers (so Excel can sort and filter them). A cached formula
    result whose full 17-digit precision would not survive a numeric cell is
    kept as text instead, so the snapshot never rounds a value; Excel marks those
    few cells as "number stored as text".
 
-3. Read the build log. `WARNING:` lines flag a changed layout (missing required
+4. Read the build log. `WARNING:` lines flag a changed layout (missing required
    column, added/removed column, suspicious record-count jump), a comment that
    could not be re-anchored, or a series missing from `vibration.json` (a
-   paste-ready stub is printed).
-4. Review `git diff --stat data.js` and commit.
+   paste-ready stub is printed). `Cleaned:` lines list cells that were dropped
+   because they cannot be data (a temperature range pasted into a voltage or
+   current column). The `Records:` line shows the part-number delta.
+5. Review `git diff --stat data.js` and commit.
 
 Options:
 
 ```
+python refresh.py --dry-run       # report what would change, write nothing
 python refresh.py --list          # releases found under Source/, newest first
 python refresh.py --xlsm <file>   # import one specific workbook
 python refresh.py --build-only    # rebuild data.js from Inductor all data.xlsx
@@ -68,20 +75,43 @@ python refresh.py --verify        # fail if a generated file changed since the b
 point - so a workbook that used to be imported with `python build_data.py` is
 now imported with `python refresh.py`.
 
+### Column semantics
+
+The selector reads two fields whose meaning comes from the *app*, not from
+Panasonic's header text:
+
+| `data.js` field | Meaning | 04.2026 column | 11.2026 column |
+| --- | --- | --- | --- |
+| `Series` | series code, e.g. `5M-YLC` | `Series` | `Series (Util)` |
+| `Feature` | family text, e.g. `M (High Isat)` | `Feature` | `Series` |
+
+In 11.2026 Panasonic moved the family text into `Series`, emptied `Feature` and
+added `Series (Util)` for the code. `refresh.py` folds both spellings back into
+the original pair with `normalize_records()`, so `app.js` needs no change and the
+selector's fields keep their meaning from release to release. The family *names*
+themselves are Panasonic's wording and are shown as published
+(`High Isat (Standard)` → `M (High Isat)`, `LP (Low Profile)` →
+`LP (Low Cost Low Profile)`, `High Frequency` → `H (High Freq Low Loss)`, ...).
+The xlsx export keeps the workbook's own columns; only `data.js` is normalised,
+and `source_meta.json` records the workbook headers plus the resulting
+`app_columns` count.
+
+
 ### Vibration rating
 
 The workbook has a `Vibration` column, but it holds no usable ratings (mostly
-empty, plus 15 rows containing `-40 to +130` by mistake). The **Vibration**
-column in the results table (after *Temp Range*, unit `G`) is therefore filled
-from the datasheets during the build:
+empty, and in 11.2026 a temperature range was pasted into the neighbouring
+`Max Voltage (V)` / `L1 (uH)` cells of 15 rows). The build drops such impossible
+values, and the **Vibration** column in the results table (after *Temp Range*,
+unit `G`) is filled from the datasheets instead:
 
 - Values live in [`datasheet/vibration.json`](datasheet/vibration.json), keyed by
   `Series (Size)`, and are read from the `Vibration resistance (G)` column of the
   tables in `datasheet/markdown-export/*.md` (the PDFs are the original source).
-- `"g": null` means no published rating yet (shown as `—`): `PCC-D1413H` and
-  `PCC-M0750M-LL` have no datasheet, the C67-HF datasheet (`PCC-M0530M-H`,
-  `PCC-M0630M-H`) has no vibration column, and the 15 *High Performance* rows
-  have no `Series (Size)` and stay empty.
+- `"g": null` means no published rating yet (shown as `—`): `PCC-D1413H` has no
+  datasheet, the C67-HF datasheet (`PCC-M0530M-H`, `PCC-M0630M-H`) has no
+  vibration column, and the 15 *High Performance* rows have no `Series (Size)`
+  and stay empty.
 - `"source"` names the markdown export the value came from. The build checks that
   every rated part number is listed in that file and warns on drift, so the map
   cannot silently disagree with the datasheets.
@@ -95,8 +125,13 @@ To add or correct a rating, edit `vibration.json` and rerun
 embedded into `data.js`, so the app still works when opened directly from disk
 (`file://`) - no runtime fetch of the JSON.
 
-Current coverage (release 04.2026): **147 / 167 records rated** (5-50 G), 20
-unrated.
+Current coverage (release 11.2026): **152 / 171 records rated** (5-50 G), 19
+unrated - 4 rows of unrated series plus the 15 *High Performance* rows without a
+`Series (Size)`. One known gap: `ETQP4MR19KLC` (`PCC-M1040ML`) is rated from the
+`AGL0000C59-M.md` table but the part number itself is not listed in that markdown
+export, so the build prints it as `not listed in its source markdown`.
+
+
 
 
 Stock check is available in two places, both served by the same `/api/stock`
