@@ -15,7 +15,7 @@
     "PCC-M0750M": { "g": 10, "source": "AGL0000C59-M.md" },
     "PCC-M0750M-LL": { "g": 10, "source": null, "note": "no datasheet available" },
     "PCC-M0754M": { "g": 10, "source": "AGL0000C59-M.md" },
-    "PCC-M0754MS": { "g": 30, "source": "AGL0000C70-MS.md", "note": "datasheet type, no rows in the current workbook" },
+    "PCC-M0754MS": { "g": 30, "source": "AGL0000C70-MS.md", "note": "datasheet type; first workbook row in 11.2026" },
     "PCC-M078M-LE": { "g": 5, "source": "AGL0000C73-LE.md", "alias_of": "PCC-M0748M-LE", "note": "workbook typo for PCC-M0748M-LE" },
     "PCC-M0840M-LP": { "g": 5, "source": "AGL0000C63-LP.md" },
     "PCC-M0850M": { "g": 10, "source": "AGL0000C59-M.md" },

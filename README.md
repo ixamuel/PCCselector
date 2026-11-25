@@ -59,7 +59,8 @@ workbook itself uses the standard library only.
    paste-ready stub is printed). `Cleaned:` lines list cells that were dropped
    because they cannot be data (a temperature range pasted into a voltage or
    current column). The `Records:` line shows the part-number delta.
-5. Review `git diff --stat data.js` and commit.
+5. Review `git diff --stat data.js`, add the part numbers the dry run reported to
+   [Part numbers by release](#part-numbers-by-release), and commit.
 
 Options:
 
@@ -131,8 +132,34 @@ unrated - 4 rows of unrated series plus the 15 *High Performance* rows without a
 `AGL0000C59-M.md` table but the part number itself is not listed in that markdown
 export, so the build prints it as `not listed in its source markdown`.
 
+### Part numbers by release
 
+`python refresh.py --dry-run` prints `PN added (N): ...` / `PN removed (N): ...`
+followed by the per-column differences, so the table below can be updated before
+the workbook is committed.
 
+| Release | Records | Added | Removed / renamed |
+| --- | --- | --- | --- |
+| 11.2026 | 171 | `ETQP4M5R6KFN`, `ETQP3M5R6KVP`, `ETQP5M4R7TTM`, `ETQP4MR19KLC` | none |
+
+The four parts added in 11.2026:
+
+| Part number | Series (Size) | Note |
+| --- | --- | --- |
+| `ETQP4M5R6KFN` | `PCC-M0648M-LE` | new row |
+| `ETQP3M5R6KVP` | `PCC-M0530M-LP` | new row |
+| `ETQP5M4R7TTM` | `PCC-M0754MS` | the `PCC-M0754MS` datasheet type already existed, the workbook had no row for it |
+| `ETQP4MR19KLC` | `PCC-M1040ML` | new row; the part number is missing from `AGL0000C59-M.md` (see above) |
+
+No part number was removed or renamed between 04.2026 and 11.2026, and the 167
+parts present in both releases keep identical L, tolerance, DCR, size, temperature
+range, Isat, Irms, AEC-Q200 and datasheet URL values - the only value change is
+the `Image URL` of 6 parts, which was empty and is now filled. The `data.js` diff
+for 11.2026 is therefore those 4 added records, the column renames and relabelled
+family names described in [Column semantics](#column-semantics), and the helper
+columns Panasonic recalculated.
+
+### Stock check
 
 Stock check is available in two places, both served by the same `/api/stock`
 proxy:
