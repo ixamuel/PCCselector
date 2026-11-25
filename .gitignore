@@ -4,3 +4,7 @@ Thumbs.db
 
 # Excel files and backups
 .git/
+
+# Python build artifacts
+__pycache__/
+*.pyc

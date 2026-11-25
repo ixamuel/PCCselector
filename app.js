@@ -91,6 +91,7 @@ const resultColumns = [
   { key: "Size (mm)", label: "Size", sub: "mm", type: "size" },
   { key: "Max Height (mm)", label: "Max H", sub: "mm", type: "number" },
   { key: "Temp Range (deg.C)", label: "Temp Range", sub: "°C", type: "text" },
+  { key: "Vibration", label: "Vibration", sub: "G", type: "number" },
   { key: "Automotive Grade", label: "Auto", sub: "Grade", type: "text" },
   { key: "Feature", label: "Feature", sub: "", type: "text" },
   { key: "Series", label: "Series", sub: "", type: "text" },

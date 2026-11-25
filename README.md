@@ -16,7 +16,44 @@ This is the standalone version of the Inductor Selection Tool.
 export window's distributor stock check (see below). It is optional - the app
 works without it, but the stock check needs it to be deployed.
 
-## Distributor Stock Check
+## Data (`data.js`)
+
+`data.js` is generated from `Inductor all data.xlsx` - do not edit it by hand:
+
+```
+python build_data.py
+```
+
+The build prints a coverage report and writes `data.js` (`window.INDUCTOR_DATA`)
+with the same 165 records.
+
+### Vibration rating
+
+The workbook has a `Vibration` column, but it holds no usable ratings (mostly
+empty, plus 15 rows containing `-40 to +130` by mistake). The **Vibration**
+column in the results table (after *Temp Range*, unit `G`) is therefore filled
+from the datasheets at build time:
+
+- Values live in [`datasheet/vibration.json`](datasheet/vibration.json), keyed by
+  `Series (Size)`, and are read from the `Vibration resistance (G)` column of the
+  tables in `datasheet/markdown-export/*.md` (the PDFs are the original source).
+- `"g": null` means no published rating yet (shown as `—`): the C67-HF datasheet
+  has no vibration column, and `PCC-D1413H` / `PCC-M0750M-LL` have no datasheet.
+  The 15 *High Performance* rows have no `Series (Size)` and stay empty.
+- `"source"` names the markdown export the value came from. The build checks that
+  every rated part number is listed in that file and warns on drift, so the map
+  cannot silently disagree with the datasheets.
+- `"alias_of"` documents workbook typos: `PCC-M078M-LE` is `PCC-M0748M-LE`
+  (3 rows), so those parts get the same 5 G rating.
+- Ratings are per PCC-M type, not per part number - every part of a type shares
+  the value printed in its datasheet.
+
+To add or correct a rating, edit `vibration.json` and rerun `python build_data.py`.
+The values are embedded into `data.js`, so the app still works when opened
+directly from disk (`file://`) - no runtime fetch of the JSON.
+
+Current coverage: **145 / 165 records rated** (5-50 G), 20 unrated.
+
 
 Stock check is available in two places, both served by the same `/api/stock`
 proxy:

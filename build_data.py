@@ -5,6 +5,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 from typing import List, Tuple, Dict, Any
 
+import vibration
+
 WORKBOOK_PATH = "Inductor all data.xlsx"
 OUTPUT_PATH = "data.js"
 
@@ -159,6 +161,9 @@ def main() -> None:
         pn = record.get("Part Number")
         if pn and pn != "Part Number":
             records.append(record)
+
+    vibration_report = vibration.apply(records)
+    vibration.print_report(vibration_report)
 
     payload = "window.INDUCTOR_DATA = " + json.dumps(records, ensure_ascii=False) + ";\n"
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
